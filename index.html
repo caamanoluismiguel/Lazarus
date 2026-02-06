@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#0a0a0f">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
 <title>Project Lazarus — Gear 360</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
@@ -1617,6 +1621,20 @@ window.addEventListener('DOMContentLoaded', () => {
   checkCapabilities();
   logVideo('Project Lazarus initialized.', 'success');
   logVideo('Gear 360 SM-C200 controller ready.', 'info');
+
+  // Register Service Worker for offline PWA
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js')
+      .then((reg) => {
+        logVideo('Service Worker registered. App works offline.', 'success');
+        reg.addEventListener('updatefound', () => {
+          logVideo('New version available. Refresh to update.', 'info');
+        });
+      })
+      .catch((err) => {
+        logVideo('SW registration failed: ' + err.message, 'error');
+      });
+  }
 
   // Preload stitch engine when idle
   if ('requestIdleCallback' in window) {
