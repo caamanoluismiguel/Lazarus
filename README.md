@@ -42,7 +42,7 @@ Open `http://localhost:8080` in Chrome.
 
 ## Phone Setup (One-Time)
 
-The Gear 360 serves content over HTTP, but Chrome requires HTTPS. You need to whitelist the camera's IP:
+The Gear 360 serves content over HTTP, but Chrome requires HTTPS. You need one Chrome flag:
 
 1. Open Chrome on your Android phone
 2. Navigate to:
@@ -57,6 +57,8 @@ The Gear 360 serves content over HTTP, but Chrome requires HTTPS. You need to wh
 5. Tap **Relaunch**
 
 This persists across restarts. It only affects the camera's IP—no other sites are affected.
+
+**Chrome 142+ (Local Network Access):** When the app first tries to connect, Chrome will show a permission prompt asking to allow local network access. Tap **Allow**. This replaces the old `block-insecure-private-network-requests` flag.
 
 ## Usage
 
