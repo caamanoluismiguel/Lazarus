@@ -3,7 +3,7 @@
 // Precaches the app shell for full offline operation.
 // ============================================================================
 
-const CACHE_NAME = 'lazarus-v1';
+const CACHE_NAME = 'lazarus-v2';
 
 const PRECACHE_URLS = [
   './',

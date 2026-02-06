@@ -2,6 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#0a0a0f">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -650,7 +652,7 @@ main {
   <div class="wizard-header">
     <div class="logo-icon" style="width:56px;height:56px;font-size:28px;margin:0 auto 16px;">L</div>
     <h1><em>Lazarus</em> 360</h1>
-    <p>Gear 360 SM-C200 Resurrection</p>
+    <p>Gear 360 SM-C200 Resurrection · v2.0</p>
   </div>
 
   <div class="wizard-steps">
@@ -1079,13 +1081,11 @@ function dismissWizard() {
   document.getElementById('wizardOverlay').classList.add('hidden');
 }
 
-// Show wizard on first visit or if setup not confirmed
+// Show wizard on first visit — only hide after successful connection this session
 window.addEventListener('DOMContentLoaded', () => {
-  const setupDone = localStorage.getItem('lazarus-setup-done');
-  if (setupDone) {
-    // Still verify connection works, but hide wizard
-    document.getElementById('wizardOverlay').classList.add('hidden');
-  }
+  // Always show wizard unless we connect successfully this session
+  // (cleared on each page load)
+  state.wizardDismissed = false;
 });
 
 // ── State ───────────────────────────────────────────────────────────────────
