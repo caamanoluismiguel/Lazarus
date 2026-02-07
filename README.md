@@ -1,160 +1,259 @@
-# Project Lazarus — Gear 360 Resurrection
+# Project Lazarus — Gear 360 SM-C200 Resurrection
 
-**A fully offline PWA that resurrects the discontinued Samsung Gear 360 (SM-C200, 2016).**
+> Desktop Edition v3.0 · Built for Mac mini M4
 
-Controls the camera, previews live content, stitches dual-fisheye images into equirectangular 360° photos, and processes video—all directly in the browser with zero backend.
+A complete web app that brings the Samsung Gear 360 (SM-C200) back from the dead. Control the camera, stitch dual-fisheye photos into 4K equirectangular 360° images, and process videos — all from your Mac.
 
-![License](https://img.shields.io/badge/license-MIT-blue)
-![Platform](https://img.shields.io/badge/platform-Android%20Chrome-green)
-![Camera](https://img.shields.io/badge/camera-SM--C200-red)
+---
+
+## What's In The Box
+
+```
+lazarus/
+├── Lazarus.html            ← The app (single-file, runs in browser)
+├── lazarus-server.py       ← Python proxy server (routes to camera)
+├── start-lazarus.command   ← Double-click launcher for macOS
+└── README.md               ← You're reading this
+```
+
+---
+
+## Quick Start (3 Steps)
+
+### 1. Download & Place Files
+
+Put all 4 files in a folder. We recommend:
+
+```bash
+mkdir ~/lazarus
+```
+
+Move `Lazarus.html`, `lazarus-server.py`, `start-lazarus.command`, and `README.md` into `~/lazarus/`.
+
+### 2. Make the Launcher Executable (One Time)
+
+Open Terminal and run:
+
+```bash
+chmod +x ~/lazarus/start-lazarus.command
+```
+
+This only needs to be done once. After this, you can double-click the file in Finder.
+
+### 3. Launch
+
+**Option A — Double-click in Finder:**
+Navigate to `~/lazarus/` and double-click `start-lazarus.command`. It starts the server and opens your browser automatically.
+
+**Option B — Terminal:**
+```bash
+cd ~/lazarus
+python3 lazarus-server.py
+```
+Then open http://localhost:8080 in Safari or Chrome.
+
+---
+
+## Connecting to the Gear 360
+
+The in-app wizard walks you through this, but here's the full guide:
+
+### Step 1: Power On the Camera
+
+- Hold the **power button** for 2 seconds
+- Wait for the OLED screen to show **"Connect to..."**
+- If it shows a different mode, press the **Menu** button on top to cycle to Wi-Fi/connection mode
+
+### Step 2: Connect Mac Wi-Fi to Camera
+
+- Click the **Wi-Fi icon** in the Mac menu bar
+- Look for a network named like: `Gear 360(XXXX).OSC`
+- The password is the **8-digit number** on line 2 of the camera's OLED display
+
+> **Note:** Your Mac will lose internet while connected to the camera. That's expected — the camera creates its own isolated Wi-Fi network.
+
+> **Tip:** If the password isn't visible, turn the camera off and on again. It generates a new password each session.
+
+### Step 3: Start the Server
+
+Double-click `start-lazarus.command` or run `python3 lazarus-server.py` in Terminal.
+
+### Step 4: Open the App
+
+The browser opens automatically with the double-click launcher. If using Terminal, navigate to:
+
+```
+http://localhost:8080
+```
+
+### Step 5: Connect in the App
+
+Click the **⚡ Connect** button in the Camera tab. You should see battery and storage stats populate.
 
 ---
 
 ## Features
 
-- **Camera Control** — Full OSC API client: connect, capture photos, record video, browse files
-- **Real-Time Stitching** — WebGL shader converts dual-fisheye → equirectangular with live preview
-- **Calibration Mode** — Fine-tune lens offset (±5px), blend width, FOV, and circle radius per camera unit
-- **360° Export** — Saves 4096×2048 JPEG with XMP GPano metadata (auto-detected by Google Photos, Facebook, VR viewers)
-- **Video Processing** — FFmpeg.wasm with v360 filter for on-device video stitching
-- **Fully Offline** — Service Worker caches everything; works without internet after first load
+### 📷 Camera Control
+- **Connect** to Gear 360 via OSC API
+- **Photo capture** (click or press `Space`)
+- **Video recording** (start with `R`)
+- **File browser** — list and download images from the camera
+- **Live stats** — battery, storage, session ID
 
-## Quick Start
+### 🧩 Dual-Fisheye Stitcher
+- **WebGL shader** stitches dual-fisheye images into equirectangular projection
+- **Drag & drop** images directly onto the viewport
+- **5 calibration sliders** — X/Y offset, blend width, FOV, radius
+- **Save calibration** — persists in browser localStorage
+- **4K export** (4096×2048) with XMP 360° metadata
+- Google Photos, Facebook, YouTube all recognize the 360° metadata automatically
 
-### Option A: GitHub Pages (Easiest)
+### 🎬 Video Lab
+- **FFmpeg.wasm** processes dual-fisheye video to equirectangular 360°
+- Runs **entirely in the browser** — video never leaves your Mac
+- Uses `v360` filter with your calibration settings
+- Requires SharedArrayBuffer (provided by server's COOP/COEP headers)
 
-1. Fork this repo
-2. Go to **Settings → Pages → Source: Deploy from branch → `main` / `root`**
-3. Your app is live at `https://yourusername.github.io/project-lazarus/`
+---
 
-### Option B: Local
+## Keyboard Shortcuts
+
+| Key | Action |
+|------|--------|
+| `1` | Switch to Camera tab |
+| `2` | Switch to Stitch tab |
+| `3` | Switch to Video Lab tab |
+| `Space` | Capture photo (when connected) |
+| `R` | Start recording video |
+| `⌘S` | Save stitched 360° image |
+| `Esc` | Close setup wizard |
+
+---
+
+## Architecture
+
+```
+┌──────────┐        ┌──────────────────┐        ┌────────────┐
+│  Browser  │──────▶│  lazarus-server   │──────▶│  Gear 360  │
+│ :8080     │◀──────│  (Python proxy)   │◀──────│ 192.168.   │
+│           │       │  + CORS headers   │       │  107.1     │
+│ Lazarus   │       │  + COOP/COEP      │       │            │
+│  .html    │       │                   │       │  OSC API   │
+└──────────┘        └──────────────────┘        └────────────┘
+```
+
+**Why a proxy?** The Gear 360's HTTP server doesn't send CORS headers and can't be modified. Browsers block cross-origin requests from any HTTPS page (like GitHub Pages) to the camera's HTTP server. The Python proxy makes everything same-origin — the browser talks to localhost, the proxy talks to the camera. Zero restrictions.
+
+The proxy also injects:
+- **CORS headers** — `Access-Control-Allow-Origin: *`
+- **COOP/COEP headers** — enables `SharedArrayBuffer` for FFmpeg.wasm multi-threading
+
+---
+
+## Python Requirements
+
+**Python 3** — that's it. No pip packages needed.
+
+macOS comes with Python 3 pre-installed on recent versions. To check:
 
 ```bash
-# Any static server works. Example with Python:
-cd project-lazarus
-python3 -m http.server 8080
-
-# Or Node:
-npx serve .
+python3 --version
 ```
 
-Open `http://localhost:8080` in Chrome.
+If not installed:
+- **Homebrew:** `brew install python`
+- **Direct:** https://www.python.org/downloads/macos/
 
-## Phone Setup (One-Time)
+---
 
-The Gear 360 serves content over HTTP, but Chrome requires HTTPS. You need one Chrome flag:
+## Troubleshooting
 
-1. Open Chrome on your Android phone
-2. Navigate to:
-   ```
-   chrome://flags/#unsafely-treat-insecure-origin-as-secure
-   ```
-3. In the text field, enter:
-   ```
-   http://192.168.107.1
-   ```
-4. Set the flag to **Enabled**
-5. Tap **Relaunch**
+### "Camera not reachable"
+1. Is the Gear 360 powered on and in Wi-Fi mode?
+2. Is your Mac connected to the camera's Wi-Fi network (not your home Wi-Fi)?
+3. Try: `ping 192.168.107.1` in Terminal — you should get responses
+4. Turn camera off/on and reconnect
 
-This persists across restarts. It only affects the camera's IP—no other sites are affected.
+### "Port 8080 already in use"
+Another instance of the server (or another app) is using port 8080:
+```bash
+# Find what's using it
+lsof -i :8080
 
-**Chrome 142+ (Local Network Access):** When the app first tries to connect, Chrome will show a permission prompt asking to allow local network access. Tap **Allow**. This replaces the old `block-insecure-private-network-requests` flag.
-
-## Usage
-
-1. **Turn on your Gear 360** and wait for the Wi-Fi LED
-2. On your phone, **connect to the camera's Wi-Fi** network (e.g., `Gear 360(XXXX)`)
-3. Open the PWA in Chrome
-4. Tap **Connect** in the Camera tab
-5. Capture a photo → it loads into the **Stitch** tab automatically
-6. Adjust calibration if needed → tap **Save 360°**
-7. The image downloads to your phone with proper 360° metadata
-
-## How the Stitching Works
-
-The SM-C200 outputs a single image containing two circular fisheye projections side-by-side. The WebGL fragment shader:
-
-1. Maps each output pixel to spherical coordinates (longitude, latitude)
-2. Converts to a 3D direction vector on the unit sphere
-3. Projects back into the appropriate fisheye circle using equidistant projection
-4. Blends in the overlap zone with a smooth cosine weight
-
-The calibration sliders adjust the assumed center of each fisheye circle to compensate for manufacturing tolerances.
-
-## Video Processing
-
-The Video Lab uses [FFmpeg.wasm](https://github.com/ffmpegwasm/ffmpeg.wasm) to run the `v360` filter entirely on-device:
-
-```
-v360=dfisheye:equirect:ih_fov=195:iv_fov=195
+# Kill it
+kill -9 <PID>
 ```
 
-**Note:** For the multithreaded FFmpeg build (faster), the server must send these headers:
-```
-Cross-Origin-Opener-Policy: same-origin
-Cross-Origin-Embedder-Policy: require-corp
-```
+### Video Lab shows "SharedArrayBuffer unavailable"
+This means the COOP/COEP headers aren't being sent. Make sure you're accessing the app through `http://localhost:8080` (served by the proxy), not opening the HTML file directly.
 
-GitHub Pages does **not** send these headers, so video processing falls back to single-threaded mode. For full speed, self-host with the headers configured (see `_headers` file or use Cloudflare Pages / Vercel).
+### Exported 360° image not recognized
+The exporter injects Google's XMP GPano metadata. If a platform doesn't recognize it:
+- **Google Photos:** Upload via web — it auto-detects
+- **Facebook:** Upload as photo — it auto-detects
+- **YouTube:** Only for video uploads
+- **Instagram:** Does not support 360°
 
-## Repo Structure
+### Camera session expires
+The Gear 360 closes inactive sessions after a while. Just click **Connect** again.
 
-```
-project-lazarus/
-├── index.html          # Complete app (single file, ~1650 lines)
-├── manifest.json       # PWA manifest
-├── sw.js               # Service Worker for offline caching
-├── favicon.png         # Browser tab icon
-├── .nojekyll           # Tells GitHub Pages to skip Jekyll processing
-├── _headers            # Cloudflare Pages header config (optional)
-├── icons/
-│   ├── icon-192.png    # PWA icon
-│   ├── icon-512.png    # PWA icon (large)
-│   └── icon-512-maskable.png  # Android adaptive icon
-└── README.md
-```
+### Can I use Chrome or Safari?
+Both work. Safari may not support `SharedArrayBuffer` even with COOP/COEP headers, so the Video Lab might not work in Safari. Chrome is recommended for full functionality.
 
-## Hosting with Full Headers (Optional)
+---
 
-If you want multithreaded FFmpeg, deploy to a platform that supports custom headers:
+## Camera Reference
 
-**Cloudflare Pages** — Uses the `_headers` file in this repo automatically.
+### Gear 360 SM-C200 Specs
+- **Sensors:** 2× 15MP CMOS
+- **Photo resolution:** 7776×3888 (dual-fisheye)
+- **Video:** 3840×1920 @ 30fps
+- **Storage:** microSD (up to 200GB)
+- **Battery:** 1350mAh
+- **API:** Open Spherical Camera (OSC) v1
 
-**Vercel** — Add to `vercel.json`:
-```json
-{
-  "headers": [
-    {
-      "source": "/(.*)",
-      "headers": [
-        { "key": "Cross-Origin-Opener-Policy", "value": "same-origin" },
-        { "key": "Cross-Origin-Embedder-Policy", "value": "require-corp" }
-      ]
-    }
-  ]
-}
-```
+### OSC Endpoints Used
+- `GET /osc/info` — Camera model, firmware
+- `POST /osc/commands/execute` — All camera operations
+  - `camera.startSession` — Open connection
+  - `camera.takePicture` — Capture photo
+  - `camera._startCapture` — Begin video
+  - `camera._stopCapture` — End video
+  - `camera.listImages` — Browse files
+  - `camera.getImage` — Download file
+  - `camera.getOptions` — Battery, storage
 
-**Nginx:**
-```nginx
-add_header Cross-Origin-Opener-Policy "same-origin" always;
-add_header Cross-Origin-Embedder-Policy "require-corp" always;
-```
+---
 
-## Compatibility
+## Files Explained
 
-| Device | Status | Notes |
-|--------|--------|-------|
-| Samsung S21 (Android 14) | ✅ Primary target | Full support |
-| Pixel 7+ | ✅ Works | Tested |
-| Any Android Chrome 100+ | ✅ Works | Need Chrome flag |
-| iOS Safari | ⚠️ Partial | No FFmpeg (no SharedArrayBuffer), stitch works |
-| Desktop Chrome | ✅ Works | With Vite proxy for camera access |
+### `Lazarus.html`
+The entire app in a single HTML file. Contains:
+- CSS (desktop layout with sidebar navigation)
+- HTML (camera controls, stitch viewport, video lab)
+- JavaScript (OSC client, WebGL stitch engine, FFmpeg.wasm integration)
+- Three.js loaded from CDN
 
-## Camera Compatibility
+### `lazarus-server.py`
+~120 lines of Python. No dependencies beyond the standard library. Handles:
+- Static file serving (serves `Lazarus.html` at `/`)
+- Request proxying (`/osc/*` → `http://192.168.107.1/osc/*`)
+- CORS and COOP/COEP header injection
+- Minimal logging (camera requests shown with 📡)
 
-Designed for the **Samsung Gear 360 SM-C200 (2016)**. The 2017 model (SM-R210) uses a different API and is not yet supported.
+### `start-lazarus.command`
+macOS double-clickable shell script. It:
+1. Checks Python 3 is installed
+2. Checks all files exist
+3. Checks port 8080 is free
+4. Starts the server
+5. Opens your default browser to `http://localhost:8080`
+
+---
 
 ## License
 
-MIT
+This project resurrects abandoned hardware. Samsung discontinued the Gear 360 Manager app. The camera still works — it just needed someone to talk to it.
+
+Built with love for hardware that deserves better.

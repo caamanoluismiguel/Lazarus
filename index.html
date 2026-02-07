@@ -3,21 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-<meta name="theme-color" content="#0a0a0f">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="manifest" href="manifest.json">
-<link rel="icon" type="image/png" href="favicon.png">
-<link rel="apple-touch-icon" href="icons/icon-192.png">
-<title>Project Lazarus — Gear 360</title>
+<title>Project Lazarus — Gear 360 Desktop</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
 <style>
 /* ═══════════════════════════════════════════════════════════════════════════
-   PROJECT LAZARUS — Industrial Revival Aesthetic
-   Dark, utilitarian, hardware-resurrection feel
+   PROJECT LAZARUS — Desktop Edition v3.0
+   Mac mini M4 + Python proxy. No mobile, no PWA, no compromises.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -28,6 +20,7 @@
   --bg-card:    #16161f;
   --bg-input:   #1c1c28;
   --bg-hover:   #22222f;
+  --bg-sidebar: #0d0d14;
   --border:     #2a2a38;
   --border-lit: #3a3a4a;
   --text:       #c8c8d4;
@@ -46,8 +39,6 @@
   --radius-lg:  10px;
   --mono:       'JetBrains Mono', 'SF Mono', 'Consolas', monospace;
   --serif:      'Instrument Serif', 'Georgia', serif;
-  --safe-top:   env(safe-area-inset-top, 0px);
-  --safe-bot:   env(safe-area-inset-bottom, 0px);
 }
 
 html, body {
@@ -58,41 +49,37 @@ html, body {
   font-size: 13px;
   line-height: 1.5;
   overflow: hidden;
-  -webkit-tap-highlight-color: transparent;
   -webkit-font-smoothing: antialiased;
+  cursor: default;
+  user-select: none;
 }
 
-/* ── App Shell ───────────────────────────────────────────────────────────── */
+/* ── App Shell — Desktop sidebar layout ────────────────────────────────── */
 
 #app {
-  display: flex; flex-direction: column;
-  height: 100vh; height: 100dvh;
-  padding-top: var(--safe-top);
-  padding-bottom: var(--safe-bot);
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  grid-template-rows: 1fr;
+  height: 100vh;
 }
 
-/* ── Header ──────────────────────────────────────────────────────────────── */
+/* ── Sidebar Nav ───────────────────────────────────────────────────────── */
 
-header {
-  flex-shrink: 0;
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 10px 16px;
-  background: var(--bg-panel);
-  border-bottom: 1px solid var(--border);
-  z-index: 100;
+.sidebar {
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; align-items: center;
+  padding: 16px 0; gap: 4px; z-index: 10;
 }
 
-.logo {
-  display: flex; align-items: center; gap: 10px;
-}
-
-.logo-icon {
-  width: 28px; height: 28px;
-  background: var(--accent);
-  border-radius: 50%;
+.sidebar-logo {
+  width: 36px; height: 36px;
+  background: var(--accent); border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  font-size: 14px; font-weight: 700; color: #fff;
+  font-size: 16px; font-weight: 700; color: #fff;
+  margin-bottom: 20px;
   animation: pulse-glow 3s ease-in-out infinite;
+  cursor: pointer;
 }
 
 @keyframes pulse-glow {
@@ -100,94 +87,109 @@ header {
   50% { box-shadow: 0 0 12px 4px var(--accent-glow); }
 }
 
-.logo-text {
-  font-family: var(--serif);
-  font-size: 18px; font-weight: 400;
-  color: var(--text);
-  letter-spacing: 0.5px;
+.nav-btn {
+  width: 44px; height: 44px;
+  border: none; background: none; border-radius: var(--radius);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; cursor: pointer;
+  color: var(--text-muted); transition: all 0.15s;
+  position: relative;
 }
 
-.logo-text em { font-style: italic; color: var(--accent); }
-
-.conn-badge {
-  display: flex; align-items: center; gap: 6px;
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 11px; font-weight: 500;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  transition: all 0.3s;
+.nav-btn:hover { background: var(--bg-hover); color: var(--text-dim); }
+.nav-btn.active { background: var(--accent-glow); color: var(--accent); }
+.nav-btn.active::before {
+  content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+  width: 3px; height: 20px; background: var(--accent); border-radius: 0 3px 3px 0;
 }
 
-.conn-badge.offline { background: rgba(233,69,96,0.12); color: var(--accent); border: 1px solid rgba(233,69,96,0.25); }
-.conn-badge.online  { background: rgba(78,205,196,0.12); color: var(--green);  border: 1px solid rgba(78,205,196,0.25); }
-
-.conn-dot {
-  width: 6px; height: 6px; border-radius: 50%;
-  transition: background 0.3s;
+.nav-btn .tooltip {
+  display: none; position: absolute;
+  left: 56px; top: 50%; transform: translateY(-50%);
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: 4px;
+  padding: 4px 10px; font-size: 11px; font-family: var(--mono);
+  color: var(--text); white-space: nowrap; z-index: 100; pointer-events: none;
 }
 
-.conn-badge.offline .conn-dot { background: var(--accent); }
-.conn-badge.online  .conn-dot { background: var(--green); animation: blink 2s infinite; }
+.nav-btn:hover .tooltip { display: block; }
+.nav-spacer { flex: 1; }
+
+.conn-indicator {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--accent-dim); margin-bottom: 8px; transition: all 0.3s;
+  cursor: pointer;
+}
+
+.conn-indicator.online {
+  background: var(--green);
+  box-shadow: 0 0 8px rgba(78, 205, 196, 0.4);
+  animation: blink 2s infinite;
+}
 
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
-/* ── Tab Bar ─────────────────────────────────────────────────────────────── */
+/* ── Main Content Area ─────────────────────────────────────────────────── */
 
-.tabs {
-  flex-shrink: 0;
-  display: flex;
-  background: var(--bg-panel);
-  border-bottom: 1px solid var(--border);
+.main-area { display: flex; flex-direction: column; overflow: hidden; }
+
+/* ── Top Bar ───────────────────────────────────────────────────────────── */
+
+.topbar {
+  flex-shrink: 0; display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 24px; background: var(--bg-panel);
+  border-bottom: 1px solid var(--border); height: 48px;
 }
 
-.tab {
-  flex: 1;
-  padding: 10px 8px 8px;
-  text-align: center;
-  font-size: 11px; font-weight: 500;
-  letter-spacing: 0.8px;
-  text-transform: uppercase;
-  color: var(--text-dim);
-  border: none; background: none;
-  cursor: pointer;
-  border-bottom: 2px solid transparent;
-  transition: all 0.2s;
-  font-family: var(--mono);
+.topbar-left { display: flex; align-items: center; gap: 14px; }
+
+.topbar-title { font-family: var(--serif); font-size: 18px; color: var(--text); }
+.topbar-title em { color: var(--accent); font-style: italic; }
+
+.topbar-panel-label {
+  font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px;
+  color: var(--text-muted); padding: 3px 10px;
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: 4px;
 }
 
-.tab:hover { color: var(--text); background: var(--bg-hover); }
-.tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.topbar-right { display: flex; align-items: center; gap: 12px; }
 
-.tab-icon { font-size: 18px; display: block; margin-bottom: 2px; }
+.topbar-stat { font-size: 11px; color: var(--text-dim); display: flex; align-items: center; gap: 5px; }
+.topbar-stat .val { font-weight: 600; }
+.topbar-stat .val.green { color: var(--green); }
+.topbar-stat .val.blue { color: var(--blue); }
+.topbar-stat .val.accent { color: var(--accent); }
 
-/* ── Main Content ────────────────────────────────────────────────────────── */
-
-main {
-  flex: 1; overflow-y: auto; overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
+.conn-status {
+  display: flex; align-items: center; gap: 6px; padding: 4px 12px;
+  border-radius: 20px; font-size: 11px; font-weight: 500;
+  letter-spacing: 0.5px; text-transform: uppercase; cursor: pointer;
 }
 
-.panel { display: none; height: 100%; flex-direction: column; }
+.conn-status.offline { background: rgba(233,69,96,0.1); color: var(--accent); border: 1px solid rgba(233,69,96,0.2); }
+.conn-status.online { background: rgba(78,205,196,0.1); color: var(--green); border: 1px solid rgba(78,205,196,0.2); }
+
+.conn-status .dot { width: 6px; height: 6px; border-radius: 50%; }
+.conn-status.offline .dot { background: var(--accent); }
+.conn-status.online .dot { background: var(--green); animation: blink 2s infinite; }
+
+/* ── Panel Container ───────────────────────────────────────────────────── */
+
+.panel-container { flex: 1; overflow: hidden; }
+.panel { display: none; height: 100%; }
 .panel.active { display: flex; }
 
-/* ── Camera Panel ────────────────────────────────────────────────────────── */
+/* ── Camera Panel ──────────────────────────────────────────────────────── */
 
-.camera-controls {
-  padding: 16px;
-  display: flex; flex-direction: column; gap: 12px;
+.camera-panel { display: flex; flex-direction: column; height: 100%; }
+
+.camera-top { flex: 1; display: flex; min-height: 0; }
+
+.camera-preview-area {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  background: #000; position: relative; min-width: 0;
 }
 
-.preview-container {
-  position: relative;
-  background: #000;
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  aspect-ratio: 2/1;
-  border: 1px solid var(--border);
-}
-
-.preview-container canvas { width: 100% !important; height: 100% !important; }
+.camera-preview-area canvas { width: 100% !important; height: 100% !important; }
 
 .preview-placeholder {
   position: absolute; inset: 0;
@@ -196,251 +198,165 @@ main {
   gap: 12px; color: var(--text-muted);
 }
 
-.preview-placeholder .icon { font-size: 48px; opacity: 0.3; }
+.preview-placeholder .icon { font-size: 64px; opacity: 0.2; }
+.preview-placeholder .text { font-size: 14px; }
+.preview-placeholder .sub { font-size: 11px; color: var(--text-muted); }
 
-.btn-row { display: flex; gap: 8px; }
-
-.btn {
-  flex: 1;
-  padding: 12px 16px;
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  background: var(--bg-card);
-  color: var(--text);
-  font-family: var(--mono);
-  font-size: 12px; font-weight: 500;
-  cursor: pointer;
-  transition: all 0.15s;
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+.camera-sidebar {
+  width: 280px; flex-shrink: 0;
+  background: var(--bg-panel); border-left: 1px solid var(--border);
+  display: flex; flex-direction: column; overflow-y: auto;
 }
 
-.btn:hover { background: var(--bg-hover); border-color: var(--border-lit); }
-.btn:active { transform: scale(0.97); }
+.cam-section { padding: 16px; border-bottom: 1px solid var(--border); }
 
-.btn-primary {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
+.cam-section-title {
+  font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px;
+  color: var(--text-muted); margin-bottom: 12px;
 }
 
-.btn-primary:hover { background: var(--accent-dim); }
+.cam-btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
-.btn-accent {
-  background: var(--accent-glow);
-  border-color: var(--accent-dim);
-  color: var(--accent);
-}
+/* ── Camera Files ──────────────────────────────────────────────────────── */
 
-.btn-accent:hover { background: rgba(233,69,96,0.25); }
-
-.btn-blue {
-  background: rgba(74,158,255,0.1);
-  border-color: var(--blue-dim);
-  color: var(--blue);
-}
-
-.btn-blue:hover { background: rgba(74,158,255,0.2); }
-
-.btn-green {
-  background: rgba(78,205,196,0.1);
-  border-color: var(--green-dim);
-  color: var(--green);
-}
-
-.btn-green:hover { background: rgba(78,205,196,0.2); }
-
-.btn:disabled {
-  opacity: 0.35; cursor: not-allowed;
-  transform: none !important;
-}
-
-.btn .icon { font-size: 16px; }
-
-/* ── Stats Row ───────────────────────────────────────────────────────────── */
-
-.stats-row {
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
-}
-
-.stat {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 10px;
-  text-align: center;
-}
-
-.stat-label {
-  font-size: 9px; text-transform: uppercase;
-  letter-spacing: 1px; color: var(--text-muted);
-  margin-bottom: 4px;
-}
-
-.stat-value {
-  font-size: 16px; font-weight: 600;
-  color: var(--text);
-}
-
-.stat-value.accent { color: var(--accent); }
-.stat-value.green  { color: var(--green); }
-.stat-value.blue   { color: var(--blue); }
-
-/* ── File List ───────────────────────────────────────────────────────────── */
-
-.file-list {
-  padding: 0 16px 16px;
-  display: flex; flex-direction: column; gap: 6px;
-}
+.camera-files { flex: 1; overflow-y: auto; padding: 8px 16px 16px; }
 
 .file-item {
   display: flex; align-items: center; gap: 10px;
-  padding: 10px 12px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  cursor: pointer;
-  transition: all 0.15s;
+  padding: 8px 12px; background: var(--bg-card);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  cursor: pointer; transition: all 0.15s; margin-bottom: 4px;
 }
 
 .file-item:hover { border-color: var(--border-lit); background: var(--bg-hover); }
 
-.file-thumb {
-  width: 48px; height: 24px;
-  background: var(--bg-input);
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.file-thumb img { width: 100%; height: 100%; object-fit: cover; }
-
+.file-thumb { width: 40px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
 .file-info { flex: 1; min-width: 0; }
 .file-name { font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .file-meta { font-size: 10px; color: var(--text-dim); }
 
-/* ── Stitch Panel ────────────────────────────────────────────────────────── */
+/* ── Stats ─────────────────────────────────────────────────────────────── */
+
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+
+.stat-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 10px; text-align: center;
+}
+
+.stat-label { font-size: 9px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 3px; }
+.stat-value { font-size: 15px; font-weight: 600; }
+.stat-value.green { color: var(--green); }
+.stat-value.blue { color: var(--blue); }
+.stat-value.accent { color: var(--accent); }
+
+/* ── Stitch Panel ──────────────────────────────────────────────────────── */
+
+.stitch-panel { display: flex; height: 100%; }
 
 .stitch-viewport {
-  position: relative;
-  flex: 1; min-height: 0;
-  background: #000;
+  flex: 1; position: relative; background: #000; min-width: 0;
 }
 
-.stitch-viewport canvas {
-  width: 100% !important; height: 100% !important;
-  display: block;
+.stitch-viewport canvas { width: 100% !important; height: 100% !important; display: block; }
+
+.stitch-sidebar {
+  width: 300px; flex-shrink: 0;
+  background: var(--bg-panel); border-left: 1px solid var(--border);
+  display: flex; flex-direction: column; overflow-y: auto;
 }
 
-.stitch-toolbar {
-  flex-shrink: 0;
-  padding: 12px 16px;
-  background: var(--bg-panel);
-  border-top: 1px solid var(--border);
-  display: flex; flex-direction: column; gap: 10px;
+.stitch-section { padding: 16px; border-bottom: 1px solid var(--border); }
+
+.stitch-section-title {
+  font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px;
+  color: var(--text-muted); margin-bottom: 12px;
+  display: flex; align-items: center; gap: 6px;
 }
 
-.calibration-section {
-  overflow: hidden;
-  max-height: 0;
-  transition: max-height 0.35s ease;
+/* ── Drop zone ─────────────────────────────────────────────────────────── */
+
+.drop-zone {
+  border: 2px dashed var(--border); border-radius: var(--radius-lg);
+  padding: 24px; text-align: center; color: var(--text-muted);
+  font-size: 12px; transition: all 0.2s; cursor: pointer;
 }
 
-.calibration-section.open { max-height: 300px; }
+.drop-zone:hover { border-color: var(--border-lit); background: var(--bg-hover); }
+.drop-zone.dragover { border-color: var(--accent); background: var(--accent-glow); color: var(--accent); }
+.drop-zone .icon { font-size: 24px; margin-bottom: 6px; display: block; }
 
-.slider-group {
-  display: flex; flex-direction: column; gap: 8px;
-  padding-top: 10px;
-}
+/* ── Slider rows ───────────────────────────────────────────────────────── */
 
-.slider-row {
-  display: flex; align-items: center; gap: 10px;
-}
+.slider-group { display: flex; flex-direction: column; gap: 10px; }
+
+.slider-row { display: flex; align-items: center; gap: 10px; }
 
 .slider-label {
-  width: 80px; flex-shrink: 0;
+  width: 72px; flex-shrink: 0;
   font-size: 11px; color: var(--text-dim);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  text-transform: uppercase; letter-spacing: 0.5px;
 }
 
 .slider-row input[type="range"] {
-  flex: 1; height: 4px;
-  -webkit-appearance: none; appearance: none;
-  background: var(--bg-input);
-  border-radius: 2px;
-  outline: none;
+  flex: 1; height: 4px; -webkit-appearance: none; appearance: none;
+  background: var(--bg-input); border-radius: 2px; outline: none;
 }
 
 .slider-row input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none; appearance: none;
-  width: 18px; height: 18px;
-  border-radius: 50%;
-  background: var(--accent);
-  border: 2px solid var(--bg-panel);
-  cursor: pointer;
-  box-shadow: 0 0 6px var(--accent-glow);
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--accent); border: 2px solid var(--bg-panel);
+  cursor: pointer; box-shadow: 0 0 6px var(--accent-glow);
 }
 
 .slider-value {
-  width: 52px; text-align: right;
+  width: 56px; text-align: right;
   font-size: 12px; font-weight: 600;
-  color: var(--accent);
-  font-variant-numeric: tabular-nums;
+  color: var(--accent); font-variant-numeric: tabular-nums;
 }
 
-/* ── Video Lab Panel ─────────────────────────────────────────────────────── */
+/* ── Video Lab Panel ───────────────────────────────────────────────────── */
 
-.video-lab {
-  padding: 16px;
-  display: flex; flex-direction: column; gap: 14px;
+.video-panel { display: flex; height: 100%; }
+
+.video-main {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 40px; gap: 24px;
 }
 
-.lab-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 16px;
+.video-drop { width: 100%; max-width: 600px; }
+
+.video-progress-card {
+  width: 100%; max-width: 600px;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 24px; display: none;
 }
 
-.lab-card-title {
-  font-size: 11px; text-transform: uppercase;
-  letter-spacing: 1px; color: var(--text-muted);
-  margin-bottom: 10px;
-  display: flex; align-items: center; gap: 6px;
+.progress-bar { height: 8px; width: 100%; background: var(--bg-input); border-radius: 4px; overflow: hidden; margin: 12px 0; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--orange)); border-radius: 4px; transition: width 0.3s; width: 0%; }
+.progress-text { font-size: 12px; color: var(--text-dim); text-align: center; }
+
+.video-sidebar {
+  width: 300px; flex-shrink: 0;
+  background: var(--bg-panel); border-left: 1px solid var(--border);
+  display: flex; flex-direction: column; overflow-y: auto;
 }
 
-.progress-bar {
-  height: 6px; width: 100%;
-  background: var(--bg-input);
-  border-radius: 3px;
-  overflow: hidden;
-  margin: 10px 0;
+.video-section { padding: 16px; border-bottom: 1px solid var(--border); }
+
+.video-section-title {
+  font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px;
+  color: var(--text-muted); margin-bottom: 12px;
 }
 
-.progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--accent), var(--orange));
-  border-radius: 3px;
-  transition: width 0.3s;
-  width: 0%;
-}
-
-.progress-text {
-  font-size: 11px; color: var(--text-dim);
-  text-align: center;
-}
-
-/* ── Status Log ──────────────────────────────────────────────────────────── */
+/* ── Log ───────────────────────────────────────────────────────────────── */
 
 .log-container {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 10px;
-  max-height: 120px;
-  overflow-y: auto;
-  font-size: 11px;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 10px;
+  max-height: 200px; overflow-y: auto; font-size: 11px;
 }
 
 .log-entry { padding: 2px 0; color: var(--text-dim); }
@@ -449,661 +365,516 @@ main {
 .log-entry.success { color: var(--green); }
 .log-entry.info { color: var(--blue); }
 
-/* ── Toast ───────────────────────────────────────────────────────────────── */
+/* ── Buttons ───────────────────────────────────────────────────────────── */
+
+.btn {
+  padding: 10px 16px; border-radius: var(--radius);
+  border: 1px solid var(--border); background: var(--bg-card);
+  color: var(--text); font-family: var(--mono);
+  font-size: 12px; font-weight: 500; cursor: pointer;
+  transition: all 0.15s;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+
+.btn:hover { background: var(--bg-hover); border-color: var(--border-lit); }
+.btn:active { transform: scale(0.97); }
+.btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none !important; }
+
+.btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn-primary:hover { background: var(--accent-dim); }
+.btn-green { background: rgba(78,205,196,0.1); border-color: var(--green-dim); color: var(--green); }
+.btn-green:hover { background: rgba(78,205,196,0.2); }
+.btn-blue { background: rgba(74,158,255,0.1); border-color: var(--blue-dim); color: var(--blue); }
+.btn-blue:hover { background: rgba(74,158,255,0.2); }
+.btn-accent { background: var(--accent-glow); border-color: var(--accent-dim); color: var(--accent); }
+.btn-accent:hover { background: rgba(233,69,96,0.25); }
+
+/* ── Toast ──────────────────────────────────────────────────────────────── */
 
 .toast {
-  position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(100px);
-  padding: 10px 20px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  font-size: 12px;
-  color: var(--text);
-  z-index: 1000;
-  opacity: 0;
+  position: fixed; bottom: 24px; right: 24px;
+  padding: 10px 20px; background: var(--bg-card);
+  border: 1px solid var(--border); border-radius: var(--radius-lg);
+  font-size: 12px; color: var(--text); z-index: 1000;
+  opacity: 0; transform: translateY(20px);
   transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-  pointer-events: none;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  pointer-events: none; box-shadow: 0 8px 32px rgba(0,0,0,0.4);
 }
 
-.toast.show {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
-
+.toast.show { opacity: 1; transform: translateY(0); }
 .toast.error { border-color: var(--accent); color: var(--accent); }
 .toast.success { border-color: var(--green); color: var(--green); }
 
-/* ── Section titles ──────────────────────────────────────────────────────── */
-
-.section-title {
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-  color: var(--text-muted);
-  padding: 8px 16px 4px;
+.kbd {
+  display: inline-block; padding: 1px 5px; font-size: 10px; font-family: var(--mono);
+  background: var(--bg-input); border: 1px solid var(--border); border-radius: 3px;
+  color: var(--text-dim); line-height: 1.4;
 }
 
-/* ── Scrollbar ───────────────────────────────────────────────────────────── */
-
-::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
-/* ── Setup Wizard Overlay ────────────────────────────────────────────────── */
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinning { animation: spin 1s linear infinite; display: inline-block; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SETUP WIZARD — Hardware setup for Mac mini
+   ═══════════════════════════════════════════════════════════════════════════ */
 
 .wizard-overlay {
   position: fixed; inset: 0; z-index: 9999;
   background: var(--bg-deep);
-  display: flex; flex-direction: column;
+  display: flex; align-items: center; justify-content: center;
   overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
 }
 
 .wizard-overlay.hidden { display: none; }
 
-.wizard-header {
-  padding: 40px 24px 20px;
-  text-align: center;
+.wizard-box {
+  width: 560px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 40px;
 }
 
+.wizard-header { text-align: center; margin-bottom: 32px; }
+
 .wizard-header .logo-icon {
-  width: 56px; height: 56px;
-  font-size: 28px;
+  width: 64px; height: 64px; border-radius: 50%;
+  background: var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 32px; font-weight: 700; color: #fff;
   margin: 0 auto 16px;
+  animation: pulse-glow 3s ease-in-out infinite;
 }
 
 .wizard-header h1 {
-  font-family: var(--serif);
-  font-size: 28px; font-weight: 400;
-  color: var(--text);
-  margin-bottom: 6px;
+  font-family: var(--serif); font-size: 32px; font-weight: 400;
+  color: var(--text); margin-bottom: 4px;
 }
 
 .wizard-header h1 em { color: var(--accent); font-style: italic; }
 
-.wizard-header p {
-  font-size: 12px; color: var(--text-dim);
-}
+.wizard-header p { font-size: 12px; color: var(--text-dim); }
 
-.wizard-steps {
-  padding: 8px 20px 32px;
-  display: flex; flex-direction: column; gap: 12px;
-}
+.wizard-steps { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
 
 .wizard-step {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 16px;
-  transition: border-color 0.3s;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 18px; transition: border-color 0.3s;
 }
 
 .wizard-step.done { border-color: var(--green-dim); }
 .wizard-step.fail { border-color: var(--accent-dim); }
 .wizard-step.active { border-color: var(--blue-dim); }
 
-.step-header {
-  display: flex; align-items: center; gap: 10px;
-  margin-bottom: 8px;
-}
+.step-header { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
 
 .step-num {
-  width: 24px; height: 24px;
-  border-radius: 50%;
-  background: var(--bg-input);
-  border: 1px solid var(--border);
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--bg-input); border: 1px solid var(--border);
   display: flex; align-items: center; justify-content: center;
-  font-size: 11px; font-weight: 700;
-  color: var(--text-dim);
-  flex-shrink: 0;
+  font-size: 12px; font-weight: 700; color: var(--text-dim); flex-shrink: 0;
 }
 
 .wizard-step.done .step-num { background: var(--green-dim); color: #fff; border-color: var(--green); }
 .wizard-step.fail .step-num { background: var(--accent-dim); color: #fff; border-color: var(--accent); }
 .wizard-step.active .step-num { background: var(--blue-dim); color: #fff; border-color: var(--blue); }
 
-.step-title {
-  font-size: 13px; font-weight: 600;
-  color: var(--text);
-}
+.step-title { font-size: 14px; font-weight: 600; color: var(--text); }
 
-.step-body {
-  font-size: 11.5px; color: var(--text-dim);
-  line-height: 1.6;
-}
+.step-body { font-size: 12px; color: var(--text-dim); line-height: 1.7; }
+.step-body strong { color: var(--text); }
 
 .step-body code {
-  display: block;
-  background: var(--bg-input);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 8px 10px;
-  margin: 8px 0;
-  font-family: var(--mono);
-  font-size: 10.5px;
-  color: var(--accent);
-  word-break: break-all;
-  -webkit-user-select: all;
-  user-select: all;
+  display: block; background: var(--bg-input); border: 1px solid var(--border);
+  border-radius: 4px; padding: 10px 12px; margin: 8px 0;
+  font-family: var(--mono); font-size: 11px; color: var(--accent);
+  word-break: break-all; user-select: all; cursor: text;
 }
 
 .step-body .note {
-  background: rgba(74,158,255,0.08);
-  border-left: 2px solid var(--blue);
-  padding: 6px 10px;
-  margin: 8px 0;
-  font-size: 11px;
-  color: var(--blue);
+  background: rgba(74,158,255,0.08); border-left: 2px solid var(--blue);
+  padding: 8px 12px; margin: 8px 0; font-size: 11px; color: var(--blue);
   border-radius: 0 4px 4px 0;
 }
 
 .step-body .warn {
-  background: rgba(233,69,96,0.08);
-  border-left: 2px solid var(--accent);
-  padding: 6px 10px;
-  margin: 8px 0;
-  font-size: 11px;
-  color: var(--accent);
+  background: rgba(233,69,96,0.08); border-left: 2px solid var(--accent);
+  padding: 8px 12px; margin: 8px 0; font-size: 11px; color: var(--accent);
   border-radius: 0 4px 4px 0;
 }
 
-.step-status {
-  margin-top: 8px;
-  font-size: 11px;
-  font-weight: 600;
-}
-
+.step-status { margin-top: 8px; font-size: 11px; font-weight: 600; }
 .step-status.pass { color: var(--green); }
 .step-status.fail { color: var(--accent); }
 .step-status.wait { color: var(--yellow); }
 
 .wizard-actions {
-  padding: 0 20px 40px;
   display: flex; flex-direction: column; gap: 8px;
 }
 
-/* ── Animations ──────────────────────────────────────────────────────────── */
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
+.wizard-version {
+  text-align: center; font-size: 10px; color: var(--text-muted);
+  margin-top: 16px;
 }
 
-.animate-in { animation: fadeIn 0.4s ease both; }
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.spinning { animation: spin 1s linear infinite; display: inline-block; }
-
-/* ── Responsive ──────────────────────────────────────────────────────────── */
-
-@media (min-width: 600px) {
-  #app { max-width: 480px; margin: 0 auto; border-left: 1px solid var(--border); border-right: 1px solid var(--border); }
-  .wizard-overlay { max-width: 480px; margin: 0 auto; }
-}
 </style>
 </head>
 <body>
-<!-- ═══ SETUP WIZARD OVERLAY ═══════════════════════════════════════════════ -->
+
+<!-- ═══ SETUP WIZARD ═══════════════════════════════════════════════════════ -->
 <div class="wizard-overlay" id="wizardOverlay">
-  <div class="wizard-header">
-    <div class="logo-icon" style="width:56px;height:56px;font-size:28px;margin:0 auto 16px;">L</div>
-    <h1><em>Lazarus</em> 360</h1>
-    <p>Gear 360 SM-C200 Resurrection · v2.0</p>
-  </div>
-
-  <div class="wizard-steps">
-
-    <!-- Step 1: Wi-Fi -->
-    <div class="wizard-step" id="wizStep1">
-      <div class="step-header">
-        <div class="step-num">1</div>
-        <div class="step-title">Connect to Camera Wi-Fi</div>
-      </div>
-      <div class="step-body">
-        Turn on your Gear 360 and connect your phone to its Wi-Fi network (named like <strong>Gear 360(XXXX).OSC</strong>). The password is the <strong>8-digit number on the camera's screen</strong>.
-        <div class="note">💡 Tap the Menu button on the camera until you see "Connect to..." then select the connection mode. The password appears on line 2 of the display.</div>
-      </div>
-      <div class="step-status" id="wizStatus1"></div>
+  <div class="wizard-box">
+    <div class="wizard-header">
+      <div class="logo-icon">L</div>
+      <h1><em>Lazarus</em> 360</h1>
+      <p>Gear 360 SM-C200 Resurrection · Desktop Edition</p>
     </div>
 
-    <!-- Step 2: Chrome Flag -->
-    <div class="wizard-step" id="wizStep2">
-      <div class="step-header">
-        <div class="step-num">2</div>
-        <div class="step-title">Chrome Flag: Treat Camera as Secure</div>
+    <div class="wizard-steps">
+
+      <!-- Step 1: Camera Power -->
+      <div class="wizard-step" id="wizStep1">
+        <div class="step-header">
+          <div class="step-num">1</div>
+          <div class="step-title">Power On the Gear 360</div>
+        </div>
+        <div class="step-body">
+          Hold the <strong>power button</strong> on the camera for 2 seconds. Wait until the OLED screen shows <strong>"Connect to..."</strong> — this means Wi-Fi mode is active.
+          <div class="note">💡 If the camera shows a different mode, press the <strong>Menu</strong> button on top to cycle through modes until you see the Wi-Fi/connection mode.</div>
+        </div>
+        <div class="step-status" id="wizStatus1"></div>
       </div>
-      <div class="step-body">
-        Open a new Chrome tab and paste this URL:
-        <code>chrome://flags/#unsafely-treat-insecure-origin-as-secure</code>
-        In the text field, enter:
-        <code>http://192.168.107.1</code>
-        Set the dropdown to <strong>Enabled</strong> and tap <strong>Relaunch</strong>.
+
+      <!-- Step 2: Mac Wi-Fi -->
+      <div class="wizard-step" id="wizStep2">
+        <div class="step-header">
+          <div class="step-num">2</div>
+          <div class="step-title">Connect Mac Wi-Fi to Camera</div>
+        </div>
+        <div class="step-body">
+          Open <strong>Wi-Fi settings</strong> on your Mac (click the Wi-Fi icon in the menu bar). Connect to the camera's network:
+          <code>Gear 360(XXXX).OSC</code>
+          The password is the <strong>8-digit number</strong> shown on line 2 of the camera's OLED display.
+          <div class="note">💡 Your Mac will lose internet while connected to the camera. That's normal — the camera is its own Wi-Fi network.</div>
+          <div class="warn">⚠ If the camera password isn't showing, turn the camera off and on again. It regenerates a new password each session.</div>
+        </div>
+        <div class="step-status" id="wizStatus2"></div>
       </div>
-      <div class="step-status" id="wizStatus2"></div>
+
+      <!-- Step 3: Server -->
+      <div class="wizard-step" id="wizStep3">
+        <div class="step-header">
+          <div class="step-num">3</div>
+          <div class="step-title">Server Running</div>
+        </div>
+        <div class="step-body">
+          If you're seeing this page, the server is already running. If you need to restart it:
+          <code>cd ~/lazarus && python3 lazarus-server.py</code>
+          Or just <strong>double-click start-lazarus.command</strong> in Finder.
+          <div class="note">💡 The server proxies all camera requests so there are zero browser restrictions. Everything just works.</div>
+        </div>
+        <div class="step-status" id="wizStatus3">✓ Server is running (you're viewing this page)</div>
+      </div>
+
+      <!-- Step 4: Test -->
+      <div class="wizard-step" id="wizStep4">
+        <div class="step-header">
+          <div class="step-num">4</div>
+          <div class="step-title">Test Camera Connection</div>
+        </div>
+        <div class="step-body">
+          Click the button below to test if the proxy can reach the Gear 360. This sends a request through the server to <strong>http://192.168.107.1</strong>.
+        </div>
+        <div class="step-status" id="wizStatus4"></div>
+      </div>
+
     </div>
 
-    <!-- Step 3: LNA Permission -->
-    <div class="wizard-step" id="wizStep3">
-      <div class="step-header">
-        <div class="step-num">3</div>
-        <div class="step-title">Allow Local Network Access</div>
-      </div>
-      <div class="step-body">
-        When you tap "Connect" or "Run Test", Chrome will show a <strong>permission prompt</strong> asking to allow this site to access your local network. Tap <strong>Allow</strong>.
-        <div class="note">💡 This is Chrome's Local Network Access (LNA) feature in Chrome 142+. It replaces the old flags. If the prompt doesn't appear, the flag from Step 2 should be enough.</div>
-        If you accidentally denied the permission, tap the 🔒 icon in the address bar → Site settings → reset permissions.
-      </div>
-      <div class="step-status" id="wizStatus3"></div>
+    <div class="wizard-actions">
+      <button class="btn btn-primary" id="btnWizTest" onclick="runDiagnostic()" style="padding:14px; width:100%;">
+        🔍 Test Connection
+      </button>
+      <button class="btn btn-green" id="btnWizLaunch" onclick="dismissWizard()" style="padding:14px; width:100%; display:none;">
+        🚀 Launch Lazarus
+      </button>
+      <button class="btn" onclick="dismissWizard()" style="padding:10px; width:100%; font-size:11px; color:var(--text-muted);">
+        Skip — I'll use the stitcher with local files only
+      </button>
     </div>
 
-    <!-- Step 4: Test -->
-    <div class="wizard-step" id="wizStep4">
-      <div class="step-header">
-        <div class="step-num">4</div>
-        <div class="step-title">Test Connection</div>
-      </div>
-      <div class="step-body">
-        Tap the button below to test if the app can reach the camera. This sends a request to <strong>http://192.168.107.1/osc/info</strong> from this page.
-      </div>
-      <div class="step-status" id="wizStatus4"></div>
-    </div>
-
-  </div>
-
-  <div class="wizard-actions">
-    <button class="btn btn-primary" id="btnWizTest" onclick="runDiagnostic()" style="padding:14px;">
-      <span class="icon">🔍</span> Run Connection Test
-    </button>
-    <button class="btn btn-green" id="btnWizLaunch" onclick="dismissWizard()" style="padding:14px; display:none;">
-      <span class="icon">🚀</span> Launch App
-    </button>
-    <button class="btn" onclick="dismissWizard()" style="padding:10px; font-size:11px; color:var(--text-muted);">
-      Skip setup — I'll use the stitcher with local files only
-    </button>
+    <div class="wizard-version">v3.0 · Desktop Edition · Mac mini M4</div>
   </div>
 </div>
 
+<!-- ═══ APP ═════════════════════════════════════════════════════════════════ -->
 <div id="app">
 
-  <!-- ═══ HEADER ═══════════════════════════════════════════════════════════ -->
-  <header>
-    <div class="logo">
-      <div class="logo-icon">L</div>
-      <div class="logo-text"><em>Lazarus</em> 360</div>
-    </div>
-    <div id="connBadge" class="conn-badge offline" onclick="document.getElementById('wizardOverlay').classList.remove('hidden');" style="cursor:pointer;">
-      <div class="conn-dot"></div>
-      <span id="connText">Setup</span>
-    </div>
-  </header>
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="sidebar-logo" onclick="showWizard()" title="Setup Guide">L</div>
 
-  <!-- ═══ TABS ═════════════════════════════════════════════════════════════ -->
-  <div class="tabs">
-    <button class="tab active" data-tab="camera">
-      <span class="tab-icon">📷</span>Camera
+    <button class="nav-btn active" data-tab="camera" onclick="switchTab('camera')">
+      📷 <span class="tooltip">Camera <span class="kbd">1</span></span>
     </button>
-    <button class="tab" data-tab="stitch">
-      <span class="tab-icon">🧩</span>Stitch
+    <button class="nav-btn" data-tab="stitch" onclick="switchTab('stitch')">
+      🧩 <span class="tooltip">Stitch <span class="kbd">2</span></span>
     </button>
-    <button class="tab" data-tab="video">
-      <span class="tab-icon">🎬</span>Video Lab
+    <button class="nav-btn" data-tab="video" onclick="switchTab('video')">
+      🎬 <span class="tooltip">Video Lab <span class="kbd">3</span></span>
     </button>
+
+    <div class="nav-spacer"></div>
+
+    <div class="conn-indicator" id="connIndicator" title="Disconnected" onclick="showWizard()"></div>
+  </nav>
+
+  <!-- Main -->
+  <div class="main-area">
+
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title"><em>Lazarus</em> 360</div>
+        <div class="topbar-panel-label" id="panelLabel">CAMERA</div>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-stat">🔋 <span class="val green" id="statBattery">--</span></div>
+        <div class="topbar-stat">💾 <span class="val blue" id="statStorage">--</span></div>
+        <div class="topbar-stat">⏱ <span class="val accent" id="statSession">--</span></div>
+        <div class="conn-status offline" id="connStatus" onclick="showWizard()">
+          <div class="dot"></div>
+          <span id="connText">Setup</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-container">
+
+      <!-- Camera Panel -->
+      <div id="panelCamera" class="panel active">
+        <div class="camera-panel">
+          <div class="camera-top">
+            <div class="camera-preview-area" id="livePreviewContainer">
+              <canvas id="livePreviewCanvas"></canvas>
+              <div class="preview-placeholder" id="previewPlaceholder">
+                <div class="icon">◉</div>
+                <div class="text">Gear 360 SM-C200</div>
+                <div class="sub">Connect to start · click <em>Setup</em> badge for help</div>
+              </div>
+            </div>
+
+            <div class="camera-sidebar">
+              <div class="cam-section">
+                <div class="cam-section-title">Connection</div>
+                <button class="btn btn-green" id="btnConnect" onclick="connectCamera()" style="width:100%">
+                  ⚡ Connect
+                </button>
+              </div>
+
+              <div class="cam-section">
+                <div class="cam-section-title">Capture</div>
+                <div class="cam-btn-grid">
+                  <button class="btn btn-primary" id="btnCapture" onclick="capturePhoto()" disabled style="width:100%; grid-column:1/-1;">
+                    ◉ Photo <span class="kbd" style="margin-left:auto">Space</span>
+                  </button>
+                  <button class="btn" id="btnStartVideo" onclick="startVideo()" disabled>
+                    ⏺ Rec <span class="kbd">R</span>
+                  </button>
+                  <button class="btn btn-accent" id="btnStopVideo" onclick="stopVideo()" disabled>
+                    ⏹ Stop
+                  </button>
+                </div>
+              </div>
+
+              <div class="cam-section">
+                <div class="cam-section-title">Stats</div>
+                <div class="stats-grid">
+                  <div class="stat-card">
+                    <div class="stat-label">Battery</div>
+                    <div class="stat-value green" id="statBattery2">--</div>
+                  </div>
+                  <div class="stat-card">
+                    <div class="stat-label">Storage</div>
+                    <div class="stat-value blue" id="statStorage2">--</div>
+                  </div>
+                  <div class="stat-card">
+                    <div class="stat-label">Session</div>
+                    <div class="stat-value accent" id="statSession2">--</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="cam-section">
+                <div class="cam-section-title">Files on Camera</div>
+                <button class="btn btn-blue" id="btnListFiles" onclick="listFiles()" disabled style="width:100%; margin-bottom:10px;">
+                  📁 Browse Files
+                </button>
+                <div class="camera-files" id="fileList">
+                  <div style="text-align:center; padding:12px; color:var(--text-muted); font-size:11px;">Connect first</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stitch Panel -->
+      <div id="panelStitch" class="panel">
+        <div class="stitch-panel">
+          <div class="stitch-viewport" id="stitchViewport">
+            <canvas id="stitchCanvas"></canvas>
+            <div class="preview-placeholder" id="stitchPlaceholder">
+              <div class="icon">🧩</div>
+              <div class="text">Load a dual-fisheye image</div>
+              <div class="sub">Drag & drop or use the panel →</div>
+            </div>
+          </div>
+
+          <div class="stitch-sidebar">
+            <div class="stitch-section">
+              <div class="stitch-section-title">📂 Source</div>
+              <div class="drop-zone" id="imageDropZone" onclick="loadLocalImage()">
+                <span class="icon">📂</span>
+                Drop image here or click to browse
+              </div>
+            </div>
+
+            <div class="stitch-section">
+              <div class="stitch-section-title">⚙ Calibration</div>
+              <div class="slider-group">
+                <div class="slider-row">
+                  <span class="slider-label">X Offset</span>
+                  <input type="range" id="sliderOffsetX" min="-5" max="5" step="0.1" value="0">
+                  <span class="slider-value" id="valOffsetX">0.0 px</span>
+                </div>
+                <div class="slider-row">
+                  <span class="slider-label">Y Offset</span>
+                  <input type="range" id="sliderOffsetY" min="-5" max="5" step="0.1" value="0">
+                  <span class="slider-value" id="valOffsetY">0.0 px</span>
+                </div>
+                <div class="slider-row">
+                  <span class="slider-label">Blend °</span>
+                  <input type="range" id="sliderBlend" min="5" max="30" step="0.5" value="15">
+                  <span class="slider-value" id="valBlend">15.0°</span>
+                </div>
+                <div class="slider-row">
+                  <span class="slider-label">FOV °</span>
+                  <input type="range" id="sliderFov" min="170" max="210" step="0.5" value="195">
+                  <span class="slider-value" id="valFov">195.0°</span>
+                </div>
+                <div class="slider-row">
+                  <span class="slider-label">Radius</span>
+                  <input type="range" id="sliderRadius" min="0.20" max="0.28" step="0.001" value="0.245">
+                  <span class="slider-value" id="valRadius">0.245</span>
+                </div>
+              </div>
+              <div style="display:flex; gap:8px; margin-top:12px;">
+                <button class="btn" onclick="resetCalibration()" style="flex:1; font-size:10px;">Reset</button>
+                <button class="btn btn-green" onclick="saveCalibration()" style="flex:1; font-size:10px;">Save</button>
+              </div>
+            </div>
+
+            <div class="stitch-section">
+              <div class="stitch-section-title">💾 Export</div>
+              <button class="btn btn-primary" id="btnDownload" onclick="downloadStitched()" disabled style="width:100%;">
+                Save 4K 360° <span class="kbd">⌘S</span>
+              </button>
+              <div style="font-size:10px; color:var(--text-muted); margin-top:8px; text-align:center;">
+                4096×2048 JPEG with XMP metadata
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Video Lab Panel -->
+      <div id="panelVideo" class="panel">
+        <div class="video-panel">
+          <div class="video-main">
+            <div class="video-drop">
+              <div class="drop-zone" id="videoDropZone" onclick="loadVideoFile()">
+                <span class="icon">🎬</span>
+                Drop dual-fisheye .mp4 here or click to browse
+              </div>
+            </div>
+            <div id="videoInfo" style="display:none; font-size:12px; color:var(--text-dim); text-align:center;"></div>
+            <div style="display:flex; gap:10px;">
+              <button class="btn btn-primary" id="btnProcessVideo" onclick="processVideo()" disabled>
+                ⚙ Process to 360°
+              </button>
+              <button class="btn btn-accent" id="btnCancelVideo" onclick="cancelProcessing()" style="display:none;">
+                ✕ Cancel
+              </button>
+            </div>
+            <div class="video-progress-card" id="progressCard">
+              <div style="font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">Processing</div>
+              <div class="progress-bar"><div class="progress-fill" id="videoProgressFill"></div></div>
+              <div class="progress-text" id="videoProgressText">Initializing FFmpeg...</div>
+            </div>
+          </div>
+
+          <div class="video-sidebar">
+            <div class="video-section">
+              <div class="video-section-title">ℹ️ Capabilities</div>
+              <div style="font-size:11px; color:var(--text-dim); display:flex; flex-direction:column; gap:6px;">
+                <div>SharedArrayBuffer: <span id="sabStatus" style="font-weight:600;">checking...</span></div>
+                <div>OffscreenCanvas: <span id="oscStatus" style="font-weight:600;">checking...</span></div>
+                <div>WASM Threads: <span id="wasmStatus" style="font-weight:600;">checking...</span></div>
+                <div>Memory: <span id="memStatus" style="font-weight:600;">checking...</span></div>
+              </div>
+            </div>
+            <div class="video-section">
+              <div class="video-section-title">📋 Log</div>
+              <div class="log-container" id="videoLog"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
   </div>
-
-  <!-- ═══ MAIN ═════════════════════════════════════════════════════════════ -->
-  <main>
-
-    <!-- ── Camera Panel ────────────────────────────────────────────────── -->
-    <div id="panelCamera" class="panel active">
-      <div class="camera-controls animate-in">
-        <div class="preview-container" id="livePreviewContainer">
-          <canvas id="livePreviewCanvas"></canvas>
-          <div class="preview-placeholder" id="previewPlaceholder">
-            <div class="icon">◉</div>
-            <div>Connect to Gear 360 Wi-Fi</div>
-            <div style="font-size:10px; color:var(--text-muted)">then tap "Connect" below</div>
-          </div>
-        </div>
-
-        <div class="btn-row">
-          <button class="btn btn-green" id="btnConnect" onclick="connectCamera()">
-            <span class="icon">⚡</span> Connect
-          </button>
-          <button class="btn btn-primary" id="btnCapture" onclick="capturePhoto()" disabled>
-            <span class="icon">◉</span> Capture
-          </button>
-        </div>
-
-        <div class="btn-row">
-          <button class="btn" id="btnStartVideo" onclick="startVideo()" disabled>
-            <span class="icon">⏺</span> Rec
-          </button>
-          <button class="btn btn-accent" id="btnStopVideo" onclick="stopVideo()" disabled>
-            <span class="icon">⏹</span> Stop
-          </button>
-          <button class="btn btn-blue" id="btnListFiles" onclick="listFiles()" disabled>
-            <span class="icon">📁</span> Files
-          </button>
-        </div>
-
-        <div class="stats-row">
-          <div class="stat">
-            <div class="stat-label">Battery</div>
-            <div class="stat-value green" id="statBattery">--</div>
-          </div>
-          <div class="stat">
-            <div class="stat-label">Storage</div>
-            <div class="stat-value blue" id="statStorage">--</div>
-          </div>
-          <div class="stat">
-            <div class="stat-label">Session</div>
-            <div class="stat-value accent" id="statSession">--</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="section-title">Camera Files</div>
-      <div class="file-list" id="fileList">
-        <div style="text-align:center; padding:20px; color:var(--text-muted); font-size:11px;">
-          Connect to camera to browse files
-        </div>
-      </div>
-    </div>
-
-    <!-- ── Stitch Panel ────────────────────────────────────────────────── -->
-    <div id="panelStitch" class="panel">
-      <div class="stitch-viewport" id="stitchViewport">
-        <canvas id="stitchCanvas"></canvas>
-        <div class="preview-placeholder" id="stitchPlaceholder">
-          <div class="icon">🧩</div>
-          <div>Load a dual-fisheye image</div>
-          <div style="font-size:10px; color:var(--text-muted)">from camera or local file</div>
-        </div>
-      </div>
-
-      <div class="stitch-toolbar">
-        <div class="btn-row">
-          <button class="btn btn-blue" onclick="loadLocalImage()">
-            <span class="icon">📂</span> Load File
-          </button>
-          <button class="btn" id="btnCalibToggle" onclick="toggleCalibration()">
-            <span class="icon">⚙</span> Calibrate
-          </button>
-          <button class="btn btn-primary" id="btnDownload" onclick="downloadStitched()" disabled>
-            <span class="icon">💾</span> Save 360°
-          </button>
-        </div>
-
-        <div class="calibration-section" id="calibSection">
-          <div class="slider-group">
-            <div class="slider-row">
-              <span class="slider-label">X Offset</span>
-              <input type="range" id="sliderOffsetX" min="-5" max="5" step="0.1" value="0">
-              <span class="slider-value" id="valOffsetX">0.0 px</span>
-            </div>
-            <div class="slider-row">
-              <span class="slider-label">Y Offset</span>
-              <input type="range" id="sliderOffsetY" min="-5" max="5" step="0.1" value="0">
-              <span class="slider-value" id="valOffsetY">0.0 px</span>
-            </div>
-            <div class="slider-row">
-              <span class="slider-label">Blend °</span>
-              <input type="range" id="sliderBlend" min="5" max="30" step="0.5" value="15">
-              <span class="slider-value" id="valBlend">15.0°</span>
-            </div>
-            <div class="slider-row">
-              <span class="slider-label">FOV °</span>
-              <input type="range" id="sliderFov" min="170" max="210" step="0.5" value="195">
-              <span class="slider-value" id="valFov">195.0°</span>
-            </div>
-            <div class="slider-row">
-              <span class="slider-label">Radius</span>
-              <input type="range" id="sliderRadius" min="0.20" max="0.28" step="0.001" value="0.245">
-              <span class="slider-value" id="valRadius">0.245</span>
-            </div>
-            <div class="btn-row" style="margin-top:4px">
-              <button class="btn" onclick="resetCalibration()" style="flex:0 0 auto; padding:8px 16px; font-size:10px;">Reset</button>
-              <button class="btn btn-green" onclick="saveCalibration()" style="flex:0 0 auto; padding:8px 16px; font-size:10px;">Save to Device</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ── Video Lab Panel ─────────────────────────────────────────────── -->
-    <div id="panelVideo" class="panel">
-      <div class="video-lab animate-in">
-        <div class="lab-card">
-          <div class="lab-card-title">⚡ FFmpeg.wasm Video Processor</div>
-          <p style="font-size:12px; color:var(--text-dim); margin-bottom:12px;">
-            Process dual-fisheye videos into equirectangular 360° format entirely on-device.
-            The video never leaves your phone.
-          </p>
-          <div class="btn-row">
-            <button class="btn btn-blue" onclick="loadVideoFile()">
-              <span class="icon">🎬</span> Load .mp4
-            </button>
-            <button class="btn btn-primary" id="btnProcessVideo" onclick="processVideo()" disabled>
-              <span class="icon">⚙</span> Process
-            </button>
-          </div>
-          <div id="videoInfo" style="display:none; margin-top:10px; font-size:11px; color:var(--text-dim);"></div>
-        </div>
-
-        <div class="lab-card" id="progressCard" style="display:none;">
-          <div class="lab-card-title">📊 Processing</div>
-          <div class="progress-bar"><div class="progress-fill" id="videoProgressFill"></div></div>
-          <div class="progress-text" id="videoProgressText">Initializing FFmpeg...</div>
-          <div class="btn-row" style="margin-top:10px;">
-            <button class="btn btn-accent" onclick="cancelProcessing()">
-              <span class="icon">✕</span> Cancel
-            </button>
-          </div>
-        </div>
-
-        <div class="lab-card">
-          <div class="lab-card-title">ℹ️ Requirements</div>
-          <div style="font-size:11px; color:var(--text-dim); display:flex; flex-direction:column; gap:6px;">
-            <div>✓ SharedArrayBuffer: <span id="sabStatus" style="font-weight:600;">checking...</span></div>
-            <div>✓ OffscreenCanvas: <span id="oscStatus" style="font-weight:600;">checking...</span></div>
-            <div>✓ WASM Threads: <span id="wasmStatus" style="font-weight:600;">checking...</span></div>
-            <div>✓ Available Memory: <span id="memStatus" style="font-weight:600;">checking...</span></div>
-          </div>
-        </div>
-
-        <div class="lab-card">
-          <div class="lab-card-title">📋 Log</div>
-          <div class="log-container" id="videoLog"></div>
-        </div>
-      </div>
-    </div>
-
-  </main>
-
-  <div class="toast" id="toast"></div>
 </div>
 
-<!-- Hidden file inputs -->
+<div class="toast" id="toast"></div>
+
 <input type="file" id="imageInput" accept="image/*" style="display:none">
 <input type="file" id="videoInput" accept="video/mp4,video/*" style="display:none">
 
-<!-- ═══ THREE.JS ═════════════════════════════════════════════════════════════ -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
 <script>
 // ═══════════════════════════════════════════════════════════════════════════════
-// PROJECT LAZARUS — Complete Implementation
+// PROJECT LAZARUS v3.0 — Desktop Edition
+// Mac mini M4 + Python proxy. Zero CORS. Zero compromises.
 // ═══════════════════════════════════════════════════════════════════════════════
 
-// ── Configuration ───────────────────────────────────────────────────────────
 const CONFIG = {
-  CAMERA_IP: '192.168.107.1',
-  CAMERA_URL: 'http://192.168.107.1',
+  CAMERA_URL: '',
   OSC_EXECUTE: '/osc/commands/execute',
   OSC_STATUS: '/osc/commands/status',
   OSC_INFO: '/osc/info',
   OUTPUT_WIDTH: 4096,
   OUTPUT_HEIGHT: 2048,
-  JPEG_QUALITY: 0.92,
+  JPEG_QUALITY: 0.95,
   CONNECT_TIMEOUT: 8000,
   POLL_INTERVAL: 5000,
 };
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// SETUP WIZARD & DIAGNOSTICS
-// ═══════════════════════════════════════════════════════════════════════════════
-
-function setStepState(num, state, msg) {
-  const step = document.getElementById(`wizStep${num}`);
-  const status = document.getElementById(`wizStatus${num}`);
-  step.className = `wizard-step ${state}`;
-  status.className = `step-status ${state === 'done' ? 'pass' : state === 'fail' ? 'fail' : 'wait'}`;
-  status.innerHTML = msg;
-}
-
-async function runDiagnostic() {
-  const btn = document.getElementById('btnWizTest');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="icon spinning">⟳</span> Testing...';
-
-  // Step 1: Check if we're likely on camera Wi-Fi (heuristic)
-  setStepState(1, 'active', '<span class="spinning">⟳</span> Checking network...');
-
-  // We can't read the Wi-Fi SSID from the browser, but we can test reachability
-  let cameraReachable = false;
-  let oscInfoData = null;
-
-  // Step 2 & 3: Test actual fetch to camera
-  setStepState(2, 'active', '<span class="spinning">⟳</span> Testing...');
-  setStepState(3, 'active', '<span class="spinning">⟳</span> Testing...');
-
-  // Test 1: Simple image/resource load (bypasses CORS)
-  const imgReachable = await testImageLoad();
-
-  // Test 2: Actual fetch (tests CORS + mixed content + PNA)
-  try {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 6000);
-
-    const res = await fetch(`${CONFIG.CAMERA_URL}${CONFIG.OSC_INFO}`, {
-      method: 'GET',
-      signal: controller.signal,
-      targetAddressSpace: 'local',  // Chrome 142+ LNA
-    });
-    clearTimeout(timer);
-
-    if (res.ok) {
-      oscInfoData = await res.json();
-      cameraReachable = true;
-    }
-  } catch (err) {
-    console.log('Diagnostic fetch error:', err);
-    cameraReachable = false;
-  }
-
-  // Analyze results
-  if (cameraReachable && oscInfoData) {
-    // Everything works!
-    setStepState(1, 'done', '✓ Connected to camera Wi-Fi');
-    setStepState(2, 'done', '✓ Secure origin flag working');
-    setStepState(3, 'done', '✓ Local network access allowed');
-    setStepState(4, 'done', `✓ Camera found: ${oscInfoData.model || oscInfoData.manufacturer || 'Gear 360'}`);
-
-    document.getElementById('btnWizLaunch').style.display = 'flex';
-    btn.style.display = 'none';
-
-    // Save that setup is complete
-    localStorage.setItem('lazarus-setup-done', 'true');
-
-  } else if (imgReachable && !cameraReachable) {
-    // Camera is reachable at network level but fetch is blocked
-    // This means CORS/mixed-content/PNA is the problem
-    setStepState(1, 'done', '✓ Camera network reachable');
-    setStepState(2, 'fail', '✗ Fetch blocked — make sure the Chrome flag from Step 2 is set');
-    setStepState(3, 'fail', '✗ You may need to allow the Local Network Access permission when prompted. Try tapping Re-test — if Chrome shows a permission popup, tap Allow.');
-    setStepState(4, 'fail', '✗ Cannot communicate with camera from this page');
-
-    btn.disabled = false;
-    btn.innerHTML = '<span class="icon">🔍</span> Re-test After Setting Flags';
-
-  } else {
-    // Not on camera Wi-Fi at all, or camera is off
-    let isOnline = navigator.onLine;
-
-    if (isOnline) {
-      // User is on regular internet, not camera Wi-Fi
-      setStepState(1, 'fail', '✗ Not on camera Wi-Fi — you\'re connected to the internet. Switch Wi-Fi to the Gear 360 network.');
-      setStepState(2, 'active', '⏸ Set this flag first, then reconnect');
-      setStepState(3, 'active', '⏸ Set this flag first, then reconnect');
-      setStepState(4, 'active', '⏸ Waiting for Steps 1-3');
-    } else {
-      // Offline but camera not responding
-      setStepState(1, 'fail', '✗ Camera not responding — make sure the Gear 360 is turned on and you\'re connected to its Wi-Fi');
-      setStepState(2, 'active', '⏸ Needs camera connection first');
-      setStepState(3, 'active', '⏸ Needs camera connection first');
-      setStepState(4, 'fail', '✗ No response from camera');
-    }
-
-    btn.disabled = false;
-    btn.innerHTML = '<span class="icon">🔍</span> Run Connection Test';
-  }
-}
-
-// Test if camera is reachable at the network level using an image load
-// (bypasses CORS restrictions — if this works, the camera is on the network)
-function testImageLoad() {
-  return new Promise((resolve) => {
-    const img = new Image();
-    const timer = setTimeout(() => {
-      img.src = '';
-      resolve(false);
-    }, 4000);
-
-    img.onload = () => { clearTimeout(timer); resolve(true); };
-    img.onerror = () => {
-      clearTimeout(timer);
-      // An error from a real server is still "reachable"
-      // vs a timeout which means no server at all
-      // We use a trick: if error fires quickly, server exists but rejected the image request
-      resolve(true);
-    };
-    // Try to load the info endpoint as an image — it'll fail as image but
-    // fires onerror quickly if the server is reachable vs timeout if not
-    img.src = `${CONFIG.CAMERA_URL}${CONFIG.OSC_INFO}?_t=${Date.now()}`;
-  });
-}
-
-function dismissWizard() {
-  document.getElementById('wizardOverlay').classList.add('hidden');
-}
-
-// Show wizard on first visit — only hide after successful connection this session
-window.addEventListener('DOMContentLoaded', () => {
-  // Always show wizard unless we connect successfully this session
-  // (cleared on each page load)
-  state.wizardDismissed = false;
-});
-
-// ── State ───────────────────────────────────────────────────────────────────
 const state = {
   connected: false,
   sessionId: null,
   recording: false,
   pollTimer: null,
-  // Stitch
   stitchRenderer: null,
   stitchScene: null,
   stitchCamera: null,
   stitchMaterial: null,
   stitchTexture: null,
   imageLoaded: false,
-  // Calibration (persisted)
   calibration: loadCalibration(),
-  // Video
   videoFile: null,
   ffmpegWorker: null,
   processing: false,
@@ -1117,19 +888,121 @@ function loadCalibration() {
   return { offsetX: 0, offsetY: 0, blendWidth: 15, fov: 195, radius: 0.245 };
 }
 
-// ── Tab Navigation ──────────────────────────────────────────────────────────
-document.querySelectorAll('.tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-    tab.classList.add('active');
-    const target = tab.dataset.tab;
-    document.getElementById(`panel${target.charAt(0).toUpperCase() + target.slice(1)}`).classList.add('active');
-    if (target === 'stitch') initStitchEngine();
-  });
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SETUP WIZARD — Hardware connection guide
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function showWizard() {
+  document.getElementById('wizardOverlay').classList.remove('hidden');
+}
+
+function dismissWizard() {
+  document.getElementById('wizardOverlay').classList.add('hidden');
+  localStorage.setItem('lazarus-setup-done', 'true');
+}
+
+function setStepState(num, cls, msg) {
+  const step = document.getElementById(`wizStep${num}`);
+  const status = document.getElementById(`wizStatus${num}`);
+  step.className = `wizard-step ${cls}`;
+  status.className = `step-status ${cls === 'done' ? 'pass' : cls === 'fail' ? 'fail' : 'wait'}`;
+  status.innerHTML = msg;
+}
+
+async function runDiagnostic() {
+  const btn = document.getElementById('btnWizTest');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinning">⟳</span> Testing...';
+
+  setStepState(1, 'active', '<span class="spinning">⟳</span> Checking...');
+  setStepState(2, 'active', '<span class="spinning">⟳</span> Checking...');
+  setStepState(3, 'done', '✓ Server is running');
+  setStepState(4, 'active', '<span class="spinning">⟳</span> Reaching camera via proxy...');
+
+  let cameraInfo = null;
+
+  try {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 6000);
+    const res = await fetch(`${CONFIG.CAMERA_URL}${CONFIG.OSC_INFO}`, { signal: ctrl.signal });
+    clearTimeout(timer);
+
+    if (res.ok) {
+      cameraInfo = await res.json();
+    }
+  } catch (err) {
+    console.log('Diagnostic error:', err);
+  }
+
+  if (cameraInfo) {
+    // Success!
+    setStepState(1, 'done', '✓ Camera is powered on');
+    setStepState(2, 'done', '✓ Mac is connected to camera Wi-Fi');
+    setStepState(3, 'done', '✓ Server is running and proxying');
+    setStepState(4, 'done', `✓ Camera found: ${cameraInfo.model || cameraInfo.manufacturer || 'Gear 360 SM-C200'}`);
+
+    document.getElementById('btnWizLaunch').style.display = 'flex';
+    btn.style.display = 'none';
+  } else {
+    // Failed — figure out why
+    setStepState(1, 'active', '⏸ Make sure camera is on and in Wi-Fi mode');
+    setStepState(2, 'fail', '✗ Mac cannot reach camera — check Wi-Fi connection');
+    setStepState(3, 'done', '✓ Server is running');
+    setStepState(4, 'fail', '✗ Camera not reachable through proxy');
+
+    btn.disabled = false;
+    btn.innerHTML = '🔍 Re-test Connection';
+  }
+}
+
+// Show wizard on first visit, skip if setup already done this session
+window.addEventListener('DOMContentLoaded', () => {
+  if (localStorage.getItem('lazarus-setup-done') === 'true') {
+    document.getElementById('wizardOverlay').classList.add('hidden');
+  }
 });
 
-// ── Toast ───────────────────────────────────────────────────────────────────
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// TAB NAVIGATION + KEYBOARD SHORTCUTS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function switchTab(name) {
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.nav-btn[data-tab="${name}"]`).classList.add('active');
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel' + name.charAt(0).toUpperCase() + name.slice(1)).classList.add('active');
+  const labels = { camera: 'CAMERA', stitch: 'STITCH', video: 'VIDEO LAB' };
+  document.getElementById('panelLabel').textContent = labels[name] || name.toUpperCase();
+  if (name === 'stitch') initStitchEngine();
+}
+
+document.addEventListener('keydown', (e) => {
+  if (!e.ctrlKey && !e.metaKey && !e.altKey) {
+    if (e.key === '1') switchTab('camera');
+    if (e.key === '2') switchTab('stitch');
+    if (e.key === '3') switchTab('video');
+  }
+  if (e.key === ' ' && state.connected && !state.recording) {
+    e.preventDefault();
+    capturePhoto();
+  }
+  if (e.key === 'r' && state.connected && !state.recording && !e.metaKey) startVideo();
+  if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+    e.preventDefault();
+    if (state.imageLoaded) downloadStitched();
+  }
+  if (e.key === 'Escape') {
+    document.getElementById('wizardOverlay').classList.add('hidden');
+  }
+});
+
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// TOAST + LOG
+// ═══════════════════════════════════════════════════════════════════════════════
+
 function showToast(msg, type = '') {
   const el = document.getElementById('toast');
   el.textContent = msg;
@@ -1138,24 +1011,31 @@ function showToast(msg, type = '') {
   el._timer = setTimeout(() => el.classList.remove('show'), 3000);
 }
 
+function logVideo(msg, cls = '') {
+  const container = document.getElementById('videoLog');
+  if (!container) return;
+  const entry = document.createElement('div');
+  entry.className = `log-entry ${cls}`;
+  const t = new Date().toLocaleTimeString();
+  entry.innerHTML = `<span class="time">${t}</span>${msg}`;
+  container.appendChild(entry);
+  container.scrollTop = container.scrollHeight;
+}
+
+
 // ═══════════════════════════════════════════════════════════════════════════════
-// SECTION 1: OSC API CLIENT (Camera Communication)
+// OSC API CLIENT
 // ═══════════════════════════════════════════════════════════════════════════════
 
 async function oscExecute(command, parameters = {}) {
-  const url = `${CONFIG.CAMERA_URL}${CONFIG.OSC_EXECUTE}`;
-  const body = { name: command, parameters };
-
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), CONFIG.CONNECT_TIMEOUT);
-
   try {
-    const res = await fetch(url, {
+    const res = await fetch(`${CONFIG.CAMERA_URL}${CONFIG.OSC_EXECUTE}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
+      body: JSON.stringify({ name: command, parameters }),
       signal: controller.signal,
-      targetAddressSpace: 'local',  // Chrome 142+ LNA: declares local network intent
     });
     clearTimeout(timer);
     if (!res.ok) throw new Error(`OSC ${res.status}: ${res.statusText}`);
@@ -1169,32 +1049,22 @@ async function oscExecute(command, parameters = {}) {
 async function connectCamera() {
   const btn = document.getElementById('btnConnect');
   btn.disabled = true;
-  btn.innerHTML = '<span class="icon spinning">⟳</span> Connecting...';
+  btn.innerHTML = '<span class="spinning">⟳</span> Connecting...';
 
-  // First, quick test if camera is reachable at all
   try {
-    const infoCtrl = new AbortController();
-    const infoTimer = setTimeout(() => infoCtrl.abort(), 5000);
-    const infoRes = await fetch(`${CONFIG.CAMERA_URL}${CONFIG.OSC_INFO}`, {
-      method: 'GET',
-      signal: infoCtrl.signal,
-      targetAddressSpace: 'local',  // Chrome 142+ LNA
-    });
-    clearTimeout(infoTimer);
-    if (!infoRes.ok) throw new Error('Camera responded with error');
-    logVideo('Camera reachable. Starting session...', 'info');
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 5000);
+    const info = await fetch(`${CONFIG.CAMERA_URL}${CONFIG.OSC_INFO}`, { signal: ctrl.signal });
+    clearTimeout(t);
+    if (!info.ok) throw new Error('Camera error');
+    const data = await info.json();
+    logVideo(`Camera: ${data.model || data.manufacturer || 'Gear 360'}`, 'info');
   } catch (err) {
     btn.disabled = false;
-    btn.innerHTML = '<span class="icon">⚡</span> Connect';
-
+    btn.innerHTML = '⚡ Connect';
     if (err.name === 'AbortError') {
-      showToast('Camera not reachable. Check Wi-Fi connection.', 'error');
-      logVideo('Timeout: Camera not reachable at 192.168.107.1', 'error');
-    } else if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
-      showToast('Blocked by browser. Tap the status badge → run Setup.', 'error');
-      logVideo('Fetch blocked. Likely missing Chrome flags. Tap Setup in header.', 'error');
-      // Auto-open wizard
-      document.getElementById('wizardOverlay').classList.remove('hidden');
+      showToast('Camera not reachable — check setup guide', 'error');
+      logVideo('Timeout. Is the Gear 360 on? Is Mac on camera Wi-Fi?', 'error');
     } else {
       showToast(`Connection error: ${err.message}`, 'error');
       logVideo(`Error: ${err.message}`, 'error');
@@ -1202,18 +1072,18 @@ async function connectCamera() {
     return;
   }
 
-  // Camera is reachable — start session
   try {
     const res = await oscExecute('camera.startSession');
     state.sessionId = res.results?.sessionId || res.results?.id || 'active';
     state.connected = true;
     updateConnectionUI(true);
-    document.getElementById('statSession').textContent = state.sessionId.substring(0, 8);
+    const sid = state.sessionId.substring(0, 8);
+    document.getElementById('statSession').textContent = sid;
+    document.getElementById('statSession2').textContent = sid;
     enableCameraButtons(true);
     showToast('Connected to Gear 360', 'success');
     startPolling();
-    logVideo('Session started: ' + state.sessionId, 'success');
-    // Mark setup as done
+    logVideo('Session: ' + state.sessionId, 'success');
     localStorage.setItem('lazarus-setup-done', 'true');
   } catch (err) {
     state.connected = false;
@@ -1222,23 +1092,26 @@ async function connectCamera() {
     logVideo(`Session error: ${err.message}`, 'error');
   } finally {
     btn.disabled = false;
-    btn.innerHTML = '<span class="icon">⚡</span> Connect';
+    btn.innerHTML = '⚡ Connect';
   }
 }
 
 function updateConnectionUI(connected) {
-  const badge = document.getElementById('connBadge');
+  const badge = document.getElementById('connStatus');
   const text = document.getElementById('connText');
+  const indicator = document.getElementById('connIndicator');
   if (connected) {
-    badge.className = 'conn-badge online';
+    badge.className = 'conn-status online';
     text.textContent = 'Connected';
+    indicator.className = 'conn-indicator online';
+    indicator.title = 'Connected to Gear 360';
     badge.onclick = null;
-    badge.style.cursor = 'default';
   } else {
-    badge.className = 'conn-badge offline';
+    badge.className = 'conn-status offline';
     text.textContent = 'Setup';
-    badge.onclick = () => document.getElementById('wizardOverlay').classList.remove('hidden');
-    badge.style.cursor = 'pointer';
+    indicator.className = 'conn-indicator';
+    indicator.title = 'Disconnected — click for setup';
+    badge.onclick = showWizard;
   }
 }
 
@@ -1256,15 +1129,10 @@ async function capturePhoto() {
     const fileUri = res.results?.fileUri || res.results?.fileUrl;
     showToast(`Photo captured: ${fileUri || 'OK'}`, 'success');
     logVideo(`Photo: ${fileUri}`, 'success');
-    // Offer to load into stitcher
-    if (fileUri) {
-      setTimeout(() => fetchAndStitch(fileUri), 500);
-    }
+    if (fileUri) setTimeout(() => fetchAndStitch(fileUri), 500);
   } catch (err) {
     showToast(`Capture failed: ${err.message}`, 'error');
-  } finally {
-    btn.disabled = false;
-  }
+  } finally { btn.disabled = false; }
 }
 
 async function startVideo() {
@@ -1274,80 +1142,56 @@ async function startVideo() {
     document.getElementById('btnStartVideo').disabled = true;
     document.getElementById('btnStopVideo').disabled = false;
     showToast('Recording started', 'success');
-  } catch (err) {
-    showToast(`Record failed: ${err.message}`, 'error');
-  }
+  } catch (err) { showToast(`Record failed: ${err.message}`, 'error'); }
 }
 
 async function stopVideo() {
   try {
-    const res = await oscExecute('camera._stopCapture', { sessionId: state.sessionId });
+    await oscExecute('camera._stopCapture', { sessionId: state.sessionId });
     state.recording = false;
     document.getElementById('btnStartVideo').disabled = false;
     document.getElementById('btnStopVideo').disabled = true;
     showToast('Recording saved', 'success');
-  } catch (err) {
-    showToast(`Stop failed: ${err.message}`, 'error');
-  }
+  } catch (err) { showToast(`Stop failed: ${err.message}`, 'error'); }
 }
 
 async function listFiles() {
   try {
-    const res = await oscExecute('camera.listImages', {
-      entryCount: 50,
-      maxSize: 160,
-    });
-    const entries = res.results?.entries || [];
-    renderFileList(entries);
-  } catch (err) {
-    showToast(`List failed: ${err.message}`, 'error');
-  }
+    const res = await oscExecute('camera.listImages', { entryCount: 50, maxSize: 160 });
+    renderFileList(res.results?.entries || []);
+  } catch (err) { showToast(`List failed: ${err.message}`, 'error'); }
 }
 
 function renderFileList(entries) {
   const el = document.getElementById('fileList');
   if (!entries.length) {
-    el.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted); font-size:11px;">No files found on camera</div>';
+    el.innerHTML = '<div style="text-align:center;padding:12px;color:var(--text-muted);font-size:11px;">No files on camera</div>';
     return;
   }
   el.innerHTML = entries.map((e, i) => {
     const name = e.name || e.fileUri?.split('/').pop() || `File ${i + 1}`;
     const size = e.size ? (e.size / 1024 / 1024).toFixed(1) + ' MB' : '--';
     const isVideo = name.toLowerCase().endsWith('.mp4');
-    return `
-      <div class="file-item" onclick="fetchAndStitch('${e.fileUri || e.name}')">
-        <div class="file-thumb" style="display:flex;align-items:center;justify-content:center;font-size:18px;">
-          ${isVideo ? '🎬' : '🖼'}
-        </div>
-        <div class="file-info">
-          <div class="file-name">${name}</div>
-          <div class="file-meta">${size} · ${isVideo ? 'Video' : 'Photo'}</div>
-        </div>
-        <span style="color:var(--accent); font-size:16px;">→</span>
-      </div>
-    `;
+    return `<div class="file-item" onclick="fetchAndStitch('${e.fileUri || e.name}')">
+      <div class="file-thumb">${isVideo ? '🎬' : '🖼'}</div>
+      <div class="file-info">
+        <div class="file-name">${name}</div>
+        <div class="file-meta">${size} · ${isVideo ? 'Video' : 'Photo'}</div>
+      </div></div>`;
   }).join('');
 }
 
 async function fetchAndStitch(fileUri) {
   showToast('Downloading from camera...', '');
   try {
-    const res = await oscExecute('camera.getImage', { fileUri, maxSize: 3840 });
-    // If the camera returns base64 or binary, handle accordingly
-    // For standard OSC, we fetch the image directly
-    const imgUrl = `${CONFIG.CAMERA_URL}${fileUri}`;
-    loadImageToStitcher(imgUrl);
-    // Switch to stitch tab
-    document.querySelector('[data-tab="stitch"]').click();
+    await oscExecute('camera.getImage', { fileUri, maxSize: 3840 });
+    loadImageToStitcher(`${CONFIG.CAMERA_URL}${fileUri}`);
+    switchTab('stitch');
   } catch (err) {
-    // Fallback: try direct URL
     try {
-      const imgUrl = `${CONFIG.CAMERA_URL}${fileUri}`;
-      loadImageToStitcher(imgUrl);
-      document.querySelector('[data-tab="stitch"]').click();
-    } catch (e2) {
-      showToast(`Download failed: ${err.message}`, 'error');
-    }
+      loadImageToStitcher(`${CONFIG.CAMERA_URL}${fileUri}`);
+      switchTab('stitch');
+    } catch (e2) { showToast(`Download failed: ${err.message}`, 'error'); }
   }
 }
 
@@ -1362,21 +1206,22 @@ function startPolling() {
       });
       const opts = res.results?.options || {};
       if (opts.batteryLevel !== undefined) {
-        document.getElementById('statBattery').textContent = Math.round(opts.batteryLevel * 100) + '%';
+        const pct = Math.round(opts.batteryLevel * 100) + '%';
+        document.getElementById('statBattery').textContent = pct;
+        document.getElementById('statBattery2').textContent = pct;
       }
       if (opts.remainingSpace !== undefined && opts.totalSpace) {
-        const used = ((opts.totalSpace - opts.remainingSpace) / opts.totalSpace * 100).toFixed(0);
-        document.getElementById('statStorage').textContent = used + '%';
+        const used = ((opts.totalSpace - opts.remainingSpace) / opts.totalSpace * 100).toFixed(0) + '%';
+        document.getElementById('statStorage').textContent = used;
+        document.getElementById('statStorage2').textContent = used;
       }
-    } catch (e) {
-      // Silent fail on polling — don't spam the user
-    }
+    } catch (e) {}
   }, CONFIG.POLL_INTERVAL);
 }
 
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// SECTION 2: WEBGL STITCH ENGINE (Three.js)
+// WEBGL STITCH ENGINE
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const VERTEX_SHADER = `
@@ -1388,169 +1233,101 @@ void main() {
 
 const FRAGMENT_SHADER = `
 precision highp float;
-
 uniform sampler2D u_texture;
-uniform vec2  u_resolution;
-uniform vec2  u_lensOffset;
+uniform vec2 u_resolution;
+uniform vec2 u_lensOffset;
 uniform float u_blendWidth;
 uniform float u_fov;
 uniform float u_circleRadius;
-uniform vec2  u_leftCenter;
-uniform vec2  u_rightCenter;
-
+uniform vec2 u_leftCenter;
+uniform vec2 u_rightCenter;
 varying vec2 vUv;
-
-#define PI      3.14159265359
-#define TWO_PI  6.28318530718
+#define PI 3.14159265359
+#define TWO_PI 6.28318530718
 #define HALF_PI 1.57079632679
 #define DEG2RAD 0.01745329252
-
 vec4 sampleFisheye(vec3 dir, vec2 center, vec2 offsetPx) {
   float theta = acos(clamp(dir.z, -1.0, 1.0));
   float maxTheta = u_fov * 0.5 * DEG2RAD;
-
   if (theta > maxTheta) return vec4(0.0);
-
   float r = (theta / maxTheta) * u_circleRadius;
   float phi = atan(dir.y, dir.x);
-
   vec2 fisheyeUV = center + vec2(cos(phi), sin(phi)) * r;
   fisheyeUV += offsetPx / u_resolution;
-
-  if (fisheyeUV.x < 0.0 || fisheyeUV.x > 1.0 ||
-      fisheyeUV.y < 0.0 || fisheyeUV.y > 1.0) {
-    return vec4(0.0);
-  }
-
+  if (fisheyeUV.x < 0.0 || fisheyeUV.x > 1.0 || fisheyeUV.y < 0.0 || fisheyeUV.y > 1.0) return vec4(0.0);
   float distFromCenter = length(fisheyeUV - center);
   float edgeFeather = 1.5 / u_resolution.x;
-  float circleMask = 1.0 - smoothstep(
-    u_circleRadius - edgeFeather,
-    u_circleRadius + edgeFeather,
-    distFromCenter
-  );
-
+  float circleMask = 1.0 - smoothstep(u_circleRadius - edgeFeather, u_circleRadius + edgeFeather, distFromCenter);
   return texture2D(u_texture, fisheyeUV) * circleMask;
 }
-
 void main() {
   float lon = vUv.x * TWO_PI - PI;
   float lat = vUv.y * PI - HALF_PI;
-
-  vec3 dir = vec3(
-    cos(lat) * sin(lon),
-    sin(lat),
-    cos(lat) * cos(lon)
-  );
-
+  vec3 dir = vec3(cos(lat) * sin(lon), sin(lat), cos(lat) * cos(lon));
   float blendRadians = u_blendWidth * DEG2RAD;
   float halfBlend = blendRadians * 0.5;
-
   float blendL = smoothstep(-HALF_PI - halfBlend, -HALF_PI + halfBlend, lon);
-  float blendR = smoothstep( HALF_PI - halfBlend,  HALF_PI + halfBlend, lon);
-
+  float blendR = smoothstep(HALF_PI - halfBlend, HALF_PI + halfBlend, lon);
   float rightWeight = clamp(blendL * (1.0 - blendR), 0.0, 1.0);
-  float leftWeight  = 1.0 - rightWeight;
-
-  vec3 leftDir  = vec3(-dir.x, dir.y, -dir.z);
-  vec3 rightDir = vec3( dir.x, dir.y,  dir.z);
-
-  vec2 leftOff  = vec2(-u_lensOffset.x, u_lensOffset.y);
-  vec2 rightOff = vec2( u_lensOffset.x, u_lensOffset.y);
-
-  vec4 leftSample  = sampleFisheye(leftDir,  u_leftCenter,  leftOff);
+  float leftWeight = 1.0 - rightWeight;
+  vec3 leftDir = vec3(-dir.x, dir.y, -dir.z);
+  vec3 rightDir = vec3(dir.x, dir.y, dir.z);
+  vec2 leftOff = vec2(-u_lensOffset.x, u_lensOffset.y);
+  vec2 rightOff = vec2(u_lensOffset.x, u_lensOffset.y);
+  vec4 leftSample = sampleFisheye(leftDir, u_leftCenter, leftOff);
   vec4 rightSample = sampleFisheye(rightDir, u_rightCenter, rightOff);
-
   vec4 color = leftSample * leftWeight + rightSample * rightWeight;
-
   float lv = step(0.01, leftSample.a);
   float rv = step(0.01, rightSample.a);
-
   if (lv > 0.0 && rv < 1.0) color = leftSample;
   else if (rv > 0.0 && lv < 1.0) color = rightSample;
-
   color.a = 1.0;
   gl_FragColor = color;
 }`;
 
 let stitchInited = false;
-let stitchRAF = null;
 
 function initStitchEngine() {
   if (stitchInited) return;
   stitchInited = true;
-
   const container = document.getElementById('stitchViewport');
   const canvas = document.getElementById('stitchCanvas');
   const w = container.clientWidth || 800;
   const h = container.clientHeight || 400;
-
-  // Renderer
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: false, preserveDrawingBuffer: true });
   renderer.setSize(w, h);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-
-  // Context loss handling
-  canvas.addEventListener('webglcontextlost', (e) => {
-    e.preventDefault();
-    showToast('WebGL context lost — will recover', 'error');
-    if (stitchRAF) cancelAnimationFrame(stitchRAF);
-  });
-  canvas.addEventListener('webglcontextrestored', () => {
-    showToast('WebGL context restored', 'success');
-    renderStitch();
-  });
-
-  // Scene
+  canvas.addEventListener('webglcontextlost', (e) => { e.preventDefault(); showToast('WebGL lost — recovering', 'error'); });
+  canvas.addEventListener('webglcontextrestored', () => { showToast('WebGL restored', 'success'); renderStitch(); });
   const scene = new THREE.Scene();
   const camera = new THREE.OrthographicCamera(-1, 1, 0.5, -0.5, 0.1, 10);
   camera.position.z = 1;
-
-  // Placeholder texture (1x1 black)
   const placeholderTex = new THREE.DataTexture(new Uint8Array([0,0,0,255]), 1, 1, THREE.RGBAFormat);
   placeholderTex.needsUpdate = true;
-
-  // Shader Material
   const cal = state.calibration;
   const material = new THREE.ShaderMaterial({
-    vertexShader: VERTEX_SHADER,
-    fragmentShader: FRAGMENT_SHADER,
+    vertexShader: VERTEX_SHADER, fragmentShader: FRAGMENT_SHADER,
     uniforms: {
-      u_texture:      { value: placeholderTex },
-      u_resolution:   { value: new THREE.Vector2(3840, 1920) },
-      u_lensOffset:   { value: new THREE.Vector2(cal.offsetX, cal.offsetY) },
-      u_blendWidth:   { value: cal.blendWidth },
-      u_fov:          { value: cal.fov },
+      u_texture: { value: placeholderTex },
+      u_resolution: { value: new THREE.Vector2(3840, 1920) },
+      u_lensOffset: { value: new THREE.Vector2(cal.offsetX, cal.offsetY) },
+      u_blendWidth: { value: cal.blendWidth },
+      u_fov: { value: cal.fov },
       u_circleRadius: { value: cal.radius },
-      u_leftCenter:   { value: new THREE.Vector2(0.25, 0.5) },
-      u_rightCenter:  { value: new THREE.Vector2(0.75, 0.5) },
+      u_leftCenter: { value: new THREE.Vector2(0.25, 0.5) },
+      u_rightCenter: { value: new THREE.Vector2(0.75, 0.5) },
     },
   });
-
-  // Fullscreen quad
-  const plane = new THREE.Mesh(new THREE.PlaneGeometry(2, 1), material);
-  scene.add(plane);
-
+  scene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 1), material));
   state.stitchRenderer = renderer;
   state.stitchScene = scene;
   state.stitchCamera = camera;
   state.stitchMaterial = material;
-
-  // Initial render
   renderer.render(scene, camera);
-
-  // Resize observer
-  const ro = new ResizeObserver(() => {
-    const w2 = container.clientWidth;
-    const h2 = container.clientHeight;
-    if (w2 > 0 && h2 > 0) {
-      renderer.setSize(w2, h2);
-      renderer.render(scene, camera);
-    }
-  });
-  ro.observe(container);
-
-  // Initialize slider values from saved calibration
+  new ResizeObserver(() => {
+    const w2 = container.clientWidth, h2 = container.clientHeight;
+    if (w2 > 0 && h2 > 0) { renderer.setSize(w2, h2); renderer.render(scene, camera); }
+  }).observe(container);
   document.getElementById('sliderOffsetX').value = cal.offsetX;
   document.getElementById('sliderOffsetY').value = cal.offsetY;
   document.getElementById('sliderBlend').value = cal.blendWidth;
@@ -1560,16 +1337,11 @@ function initStitchEngine() {
 }
 
 function renderStitch() {
-  if (!state.stitchRenderer) return;
-  state.stitchRenderer.render(state.stitchScene, state.stitchCamera);
+  if (state.stitchRenderer) state.stitchRenderer.render(state.stitchScene, state.stitchCamera);
 }
 
-// ── Calibration Sliders ─────────────────────────────────────────────────────
-['sliderOffsetX', 'sliderOffsetY', 'sliderBlend', 'sliderFov', 'sliderRadius'].forEach(id => {
-  document.getElementById(id).addEventListener('input', () => {
-    updateCalibrationFromSliders();
-    updateSliderDisplays();
-  });
+['sliderOffsetX','sliderOffsetY','sliderBlend','sliderFov','sliderRadius'].forEach(id => {
+  document.getElementById(id).addEventListener('input', () => { updateCalibrationFromSliders(); updateSliderDisplays(); });
 });
 
 function updateCalibrationFromSliders() {
@@ -1579,12 +1351,10 @@ function updateCalibrationFromSliders() {
   const bw = parseFloat(document.getElementById('sliderBlend').value);
   const fov = parseFloat(document.getElementById('sliderFov').value);
   const rad = parseFloat(document.getElementById('sliderRadius').value);
-
   state.stitchMaterial.uniforms.u_lensOffset.value.set(ox, oy);
   state.stitchMaterial.uniforms.u_blendWidth.value = bw;
   state.stitchMaterial.uniforms.u_fov.value = fov;
   state.stitchMaterial.uniforms.u_circleRadius.value = rad;
-
   state.calibration = { offsetX: ox, offsetY: oy, blendWidth: bw, fov, radius: rad };
   renderStitch();
 }
@@ -1597,10 +1367,6 @@ function updateSliderDisplays() {
   document.getElementById('valRadius').textContent = parseFloat(document.getElementById('sliderRadius').value).toFixed(3);
 }
 
-function toggleCalibration() {
-  document.getElementById('calibSection').classList.toggle('open');
-}
-
 function resetCalibration() {
   state.calibration = { offsetX: 0, offsetY: 0, blendWidth: 15, fov: 195, radius: 0.245 };
   document.getElementById('sliderOffsetX').value = 0;
@@ -1608,8 +1374,7 @@ function resetCalibration() {
   document.getElementById('sliderBlend').value = 15;
   document.getElementById('sliderFov').value = 195;
   document.getElementById('sliderRadius').value = 0.245;
-  updateSliderDisplays();
-  updateCalibrationFromSliders();
+  updateSliderDisplays(); updateCalibrationFromSliders();
   showToast('Calibration reset', '');
 }
 
@@ -1618,56 +1383,54 @@ function saveCalibration() {
   showToast('Calibration saved', 'success');
 }
 
-// ── Image Loading ───────────────────────────────────────────────────────────
-function loadLocalImage() {
-  document.getElementById('imageInput').click();
-}
+
+// ── Image Loading + Drag & Drop ─────────────────────────────────────────
+
+function loadLocalImage() { document.getElementById('imageInput').click(); }
 
 document.getElementById('imageInput').addEventListener('change', (e) => {
   const file = e.target.files[0];
   if (!file) return;
-  const url = URL.createObjectURL(file);
-  loadImageToStitcher(url);
+  loadImageToStitcher(URL.createObjectURL(file));
   e.target.value = '';
 });
+
+function setupDragDrop(targetId, handler) {
+  const el = document.getElementById(targetId);
+  if (!el) return;
+  el.addEventListener('dragover', (e) => { e.preventDefault(); el.classList.add('dragover'); });
+  el.addEventListener('dragleave', () => el.classList.remove('dragover'));
+  el.addEventListener('drop', (e) => {
+    e.preventDefault(); el.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file) handler(file);
+  });
+}
 
 function loadImageToStitcher(url) {
   initStitchEngine();
   showToast('Loading image...', '');
-
   const loader = new THREE.TextureLoader();
   loader.crossOrigin = 'anonymous';
-  loader.load(
-    url,
-    (texture) => {
-      texture.minFilter = THREE.LinearFilter;
-      texture.magFilter = THREE.LinearFilter;
-      texture.generateMipmaps = false;
-
-      // Dispose old texture
-      if (state.stitchTexture) state.stitchTexture.dispose();
-      state.stitchTexture = texture;
-
-      state.stitchMaterial.uniforms.u_texture.value = texture;
-      state.stitchMaterial.uniforms.u_resolution.value.set(texture.image.width, texture.image.height);
-      state.imageLoaded = true;
-
-      document.getElementById('stitchPlaceholder').style.display = 'none';
-      document.getElementById('btnDownload').disabled = false;
-
-      renderStitch();
-      showToast(`Loaded: ${texture.image.width}×${texture.image.height}`, 'success');
-    },
-    undefined,
-    (err) => {
-      showToast('Failed to load image', 'error');
-      console.error('Texture load error:', err);
-    }
-  );
+  loader.load(url, (texture) => {
+    texture.minFilter = THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+    texture.generateMipmaps = false;
+    if (state.stitchTexture) state.stitchTexture.dispose();
+    state.stitchTexture = texture;
+    state.stitchMaterial.uniforms.u_texture.value = texture;
+    state.stitchMaterial.uniforms.u_resolution.value.set(texture.image.width, texture.image.height);
+    state.imageLoaded = true;
+    document.getElementById('stitchPlaceholder').style.display = 'none';
+    document.getElementById('btnDownload').disabled = false;
+    renderStitch();
+    showToast(`Loaded: ${texture.image.width}×${texture.image.height}`, 'success');
+  }, undefined, () => showToast('Failed to load image', 'error'));
 }
 
+
 // ═══════════════════════════════════════════════════════════════════════════════
-// SECTION 3: HIGH-RES DOWNLOAD PIPELINE
+// HIGH-RES EXPORT
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function injectXMPMetadata(jpegBuffer, width, height) {
@@ -1675,384 +1438,209 @@ function injectXMPMetadata(jpegBuffer, width, height) {
     '<?xpacket begin="\uFEFF" id="W5M0MpCehiHzreSzNTczkc9d"?>',
     '<x:xmpmeta xmlns:x="adobe:ns:meta/">',
     '  <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">',
-    '    <rdf:Description',
-    '      xmlns:GPano="http://ns.google.com/photos/1.0/panorama/"',
-    '      GPano:ProjectionType="equirectangular"',
-    '      GPano:UsePanoramaViewer="True"',
-    `      GPano:FullPanoWidthPixels="${width}"`,
-    `      GPano:FullPanoHeightPixels="${height}"`,
-    '      GPano:CroppedAreaLeftPixels="0"',
-    '      GPano:CroppedAreaTopPixels="0"',
-    `      GPano:CroppedAreaImageWidthPixels="${width}"`,
-    `      GPano:CroppedAreaImageHeightPixels="${height}"`,
-    '    />',
+    '    <rdf:Description xmlns:GPano="http://ns.google.com/photos/1.0/panorama/"',
+    '      GPano:ProjectionType="equirectangular" GPano:UsePanoramaViewer="True"',
+    `      GPano:FullPanoWidthPixels="${width}" GPano:FullPanoHeightPixels="${height}"`,
+    '      GPano:CroppedAreaLeftPixels="0" GPano:CroppedAreaTopPixels="0"',
+    `      GPano:CroppedAreaImageWidthPixels="${width}" GPano:CroppedAreaImageHeightPixels="${height}" />`,
     '  </rdf:RDF>',
     '</x:xmpmeta>',
     '<?xpacket end="w"?>',
   ].join('\n');
-
   const enc = new TextEncoder();
   const ns = enc.encode('http://ns.adobe.com/xap/1.0/\0');
   const xmpBytes = enc.encode(xmpPayload);
   const segLen = 2 + ns.length + xmpBytes.length;
-
   const app1 = new Uint8Array(4 + ns.length + xmpBytes.length);
   app1[0] = 0xFF; app1[1] = 0xE1;
-  app1[2] = (segLen >> 8) & 0xFF;
-  app1[3] = segLen & 0xFF;
-  app1.set(ns, 4);
-  app1.set(xmpBytes, 4 + ns.length);
-
+  app1[2] = (segLen >> 8) & 0xFF; app1[3] = segLen & 0xFF;
+  app1.set(ns, 4); app1.set(xmpBytes, 4 + ns.length);
   const src = new Uint8Array(jpegBuffer);
   const result = new Uint8Array(2 + app1.length + src.length - 2);
-  result[0] = src[0]; result[1] = src[1]; // SOI
-  result.set(app1, 2);
-  result.set(src.subarray(2), 2 + app1.length);
+  result[0] = src[0]; result[1] = src[1];
+  result.set(app1, 2); result.set(src.subarray(2), 2 + app1.length);
   return result.buffer;
 }
 
 async function downloadStitched() {
-  if (!state.imageLoaded || !state.stitchRenderer) {
-    showToast('No image loaded', 'error');
-    return;
-  }
-
+  if (!state.imageLoaded || !state.stitchRenderer) return showToast('No image loaded', 'error');
   const btn = document.getElementById('btnDownload');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="icon">⏳</span> Rendering...';
-
+  btn.disabled = true; btn.innerHTML = '⏳ Rendering...';
   try {
-    const renderer = state.stitchRenderer;
-    const scene = state.stitchScene;
-    const camera = state.stitchCamera;
-    const W = CONFIG.OUTPUT_WIDTH;
-    const H = CONFIG.OUTPUT_HEIGHT;
-
-    // Step 1: Create high-res render target
-    const renderTarget = new THREE.WebGLRenderTarget(W, H, {
-      minFilter: THREE.LinearFilter,
-      magFilter: THREE.LinearFilter,
-      format: THREE.RGBAFormat,
-      type: THREE.UnsignedByteType,
-    });
-
-    // Step 2: Render to off-screen target
-    const prevTarget = renderer.getRenderTarget();
-    const prevSize = new THREE.Vector2();
-    renderer.getSize(prevSize);
-
-    renderer.setRenderTarget(renderTarget);
-    renderer.setSize(W, H, false);
-    renderer.render(scene, camera);
-
-    // Restore
-    renderer.setRenderTarget(prevTarget);
-    renderer.setSize(prevSize.x, prevSize.y, false);
-    renderStitch(); // re-render the preview
-
-    btn.innerHTML = '<span class="icon">⏳</span> Encoding...';
-
-    // Step 3: Read pixels
+    const { stitchRenderer: renderer, stitchScene: scene, stitchCamera: camera } = state;
+    const W = CONFIG.OUTPUT_WIDTH, H = CONFIG.OUTPUT_HEIGHT;
+    const rt = new THREE.WebGLRenderTarget(W, H, { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBAFormat, type: THREE.UnsignedByteType });
+    const prev = renderer.getRenderTarget();
+    const prevSize = new THREE.Vector2(); renderer.getSize(prevSize);
+    renderer.setRenderTarget(rt); renderer.setSize(W, H, false); renderer.render(scene, camera);
+    renderer.setRenderTarget(prev); renderer.setSize(prevSize.x, prevSize.y, false); renderStitch();
+    btn.innerHTML = '⏳ Encoding...';
     const pixels = new Uint8Array(W * H * 4);
-    renderer.readRenderTargetPixels(renderTarget, 0, 0, W, H, pixels);
-    renderTarget.dispose();
-
-    // Step 4: Flip Y (WebGL y=0 is bottom)
-    const rowSize = W * 4;
-    const flipped = new Uint8Array(pixels.length);
-    for (let y = 0; y < H; y++) {
-      const srcOff = y * rowSize;
-      const dstOff = (H - 1 - y) * rowSize;
-      flipped.set(pixels.subarray(srcOff, srcOff + rowSize), dstOff);
-    }
-
-    // Step 5: Encode to JPEG
+    renderer.readRenderTargetPixels(rt, 0, 0, W, H, pixels); rt.dispose();
+    const rowSize = W * 4, flipped = new Uint8Array(pixels.length);
+    for (let y = 0; y < H; y++) flipped.set(pixels.subarray(y * rowSize, y * rowSize + rowSize), (H - 1 - y) * rowSize);
     let blob;
     if (typeof OffscreenCanvas !== 'undefined') {
-      const oc = new OffscreenCanvas(W, H);
-      const ctx = oc.getContext('2d');
+      const oc = new OffscreenCanvas(W, H); const ctx = oc.getContext('2d');
       ctx.putImageData(new ImageData(new Uint8ClampedArray(flipped.buffer), W, H), 0, 0);
       blob = await oc.convertToBlob({ type: 'image/jpeg', quality: CONFIG.JPEG_QUALITY });
     } else {
-      const c = document.createElement('canvas');
-      c.width = W; c.height = H;
-      const ctx = c.getContext('2d');
-      ctx.putImageData(new ImageData(new Uint8ClampedArray(flipped.buffer), W, H), 0, 0);
+      const c = document.createElement('canvas'); c.width = W; c.height = H;
+      c.getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(flipped.buffer), W, H), 0, 0);
       blob = await new Promise(r => c.toBlob(r, 'image/jpeg', CONFIG.JPEG_QUALITY));
     }
-
-    btn.innerHTML = '<span class="icon">⏳</span> Metadata...';
-
-    // Step 6: Inject XMP 360 metadata
-    const jpegBuf = await blob.arrayBuffer();
-    const enriched = injectXMPMetadata(jpegBuf, W, H);
+    const enriched = injectXMPMetadata(await blob.arrayBuffer(), W, H);
     const finalBlob = new Blob([enriched], { type: 'image/jpeg' });
-
-    // Step 7: Download
     const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
     const filename = `lazarus_360_${ts}.jpg`;
-    const url = URL.createObjectURL(finalBlob);
-    const a = document.createElement('a');
-    a.href = url; a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1000);
-
+    const a = document.createElement('a'); a.href = URL.createObjectURL(finalBlob); a.download = filename;
+    document.body.appendChild(a); a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
     showToast(`Saved: ${filename} (${(finalBlob.size/1024/1024).toFixed(1)} MB)`, 'success');
     logVideo(`Exported: ${filename}`, 'success');
-
-  } catch (err) {
-    showToast(`Download failed: ${err.message}`, 'error');
-    console.error('Download error:', err);
-  } finally {
-    btn.disabled = false;
-    btn.innerHTML = '<span class="icon">💾</span> Save 360°';
-  }
+  } catch (err) { showToast(`Export failed: ${err.message}`, 'error'); }
+  finally { btn.disabled = false; btn.innerHTML = 'Save 4K 360° <span class="kbd">⌘S</span>'; }
 }
 
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// SECTION 4: VIDEO LAB (FFmpeg.wasm)
+// VIDEO LAB (FFmpeg.wasm)
 // ═══════════════════════════════════════════════════════════════════════════════
 
-function logVideo(msg, type = '') {
-  const log = document.getElementById('videoLog');
-  const time = new Date().toLocaleTimeString('en-US', { hour12: false });
-  log.innerHTML += `<div class="log-entry ${type}"><span class="time">${time}</span>${msg}</div>`;
-  log.scrollTop = log.scrollHeight;
-}
-
-// Check capabilities on load
 function checkCapabilities() {
   const sab = typeof SharedArrayBuffer !== 'undefined';
-  const osc = typeof OffscreenCanvas !== 'undefined';
-  const wasm = typeof WebAssembly !== 'undefined';
-
-  document.getElementById('sabStatus').textContent = sab ? 'Available ✓' : 'Unavailable ✗';
+  document.getElementById('sabStatus').textContent = sab ? 'Available' : 'Unavailable';
   document.getElementById('sabStatus').style.color = sab ? 'var(--green)' : 'var(--accent)';
-
-  document.getElementById('oscStatus').textContent = osc ? 'Available ✓' : 'Unavailable ✗';
-  document.getElementById('oscStatus').style.color = osc ? 'var(--green)' : 'var(--accent)';
-
-  document.getElementById('wasmStatus').textContent = wasm ? 'Available ✓' : 'Unavailable ✗';
+  const osc = typeof OffscreenCanvas !== 'undefined';
+  document.getElementById('oscStatus').textContent = osc ? 'Available' : 'Unavailable';
+  document.getElementById('oscStatus').style.color = osc ? 'var(--green)' : 'var(--yellow)';
+  const wasm = typeof WebAssembly !== 'undefined';
+  document.getElementById('wasmStatus').textContent = wasm ? 'Available' : 'Unavailable';
   document.getElementById('wasmStatus').style.color = wasm ? 'var(--green)' : 'var(--accent)';
-
-  // Memory estimate
   if (navigator.deviceMemory) {
-    document.getElementById('memStatus').textContent = navigator.deviceMemory + ' GB device';
+    document.getElementById('memStatus').textContent = navigator.deviceMemory + ' GB';
     document.getElementById('memStatus').style.color = navigator.deviceMemory >= 4 ? 'var(--green)' : 'var(--yellow)';
-  } else if (performance && performance.memory) {
-    const gb = (performance.memory.jsHeapSizeLimit / 1073741824).toFixed(1);
-    document.getElementById('memStatus').textContent = gb + ' GB limit';
+  } else if (performance?.memory) {
+    document.getElementById('memStatus').textContent = (performance.memory.jsHeapSizeLimit / 1073741824).toFixed(1) + ' GB';
     document.getElementById('memStatus').style.color = 'var(--blue)';
   } else {
     document.getElementById('memStatus').textContent = 'Unknown';
     document.getElementById('memStatus').style.color = 'var(--text-dim)';
   }
-
-  if (!sab) {
-    logVideo('⚠ SharedArrayBuffer unavailable. Need COOP/COEP headers for multithreaded FFmpeg.', 'error');
-    logVideo('  Serve with headers: Cross-Origin-Opener-Policy: same-origin', 'info');
-    logVideo('  Cross-Origin-Embedder-Policy: require-corp', 'info');
-  }
+  if (!sab) logVideo('SharedArrayBuffer unavailable — COOP/COEP headers needed for Video Lab.', 'error');
 }
 
-function loadVideoFile() {
-  document.getElementById('videoInput').click();
-}
+function loadVideoFile() { document.getElementById('videoInput').click(); }
 
 document.getElementById('videoInput').addEventListener('change', (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
+  const file = e.target.files[0]; if (!file) return;
+  handleVideoFile(file); e.target.value = '';
+});
+
+function handleVideoFile(file) {
   state.videoFile = file;
   const sizeMB = (file.size / 1024 / 1024).toFixed(1);
-  document.getElementById('videoInfo').style.display = 'block';
-  document.getElementById('videoInfo').innerHTML = `
-    <strong>${file.name}</strong><br>
-    Size: ${sizeMB} MB · Type: ${file.type || 'video/mp4'}
-  `;
+  const info = document.getElementById('videoInfo');
+  info.style.display = 'block';
+  info.innerHTML = `<strong>${file.name}</strong> — ${sizeMB} MB`;
   document.getElementById('btnProcessVideo').disabled = false;
   logVideo(`Loaded: ${file.name} (${sizeMB} MB)`, 'info');
-  e.target.value = '';
-});
+}
 
 async function processVideo() {
   if (!state.videoFile) return;
   state.processing = true;
-
   const progressCard = document.getElementById('progressCard');
   const progressFill = document.getElementById('videoProgressFill');
   const progressText = document.getElementById('videoProgressText');
   progressCard.style.display = 'block';
   document.getElementById('btnProcessVideo').disabled = true;
-
+  document.getElementById('btnCancelVideo').style.display = 'flex';
   logVideo('Initializing FFmpeg.wasm...', 'info');
   progressText.textContent = 'Loading FFmpeg core (~31 MB)...';
   progressFill.style.width = '5%';
-
   try {
-    // Dynamic import FFmpeg.wasm
     const { FFmpeg } = await import('https://esm.sh/@ffmpeg/ffmpeg@0.12.10');
     const { fetchFile, toBlobURL } = await import('https://esm.sh/@ffmpeg/util@0.12.1');
-
-    const ffmpeg = new FFmpeg();
-    state.ffmpegWorker = ffmpeg;
-
+    const ffmpeg = new FFmpeg(); state.ffmpegWorker = ffmpeg;
     ffmpeg.on('progress', ({ progress, time }) => {
       const pct = Math.min(Math.round(progress * 100), 99);
       progressFill.style.width = pct + '%';
       progressText.textContent = `Processing: ${pct}% (${(time / 1000000).toFixed(1)}s)`;
     });
-
-    ffmpeg.on('log', ({ message }) => {
-      if (message.includes('frame=') || message.includes('speed=')) {
-        logVideo(message, '');
-      }
-    });
-
-    // Load FFmpeg WASM core
+    ffmpeg.on('log', ({ message }) => { if (message.includes('frame=') || message.includes('speed=')) logVideo(message, ''); });
     const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm';
     await ffmpeg.load({
       coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
       wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
     });
-
-    logVideo('FFmpeg loaded. Writing input file...', 'success');
-    progressFill.style.width = '15%';
-    progressText.textContent = 'Preparing input...';
-
-    // Write file to FFmpeg virtual FS
-    const inputData = await fetchFile(state.videoFile);
-    await ffmpeg.writeFile('input.mp4', inputData);
-
-    logVideo('Starting v360 filter (dfisheye → equirectangular)...', 'info');
-    progressFill.style.width = '20%';
-    progressText.textContent = 'Processing with v360 filter...';
-
-    // Apply calibration as yaw offset
+    logVideo('FFmpeg loaded.', 'success');
+    progressFill.style.width = '15%'; progressText.textContent = 'Preparing input...';
+    await ffmpeg.writeFile('input.mp4', await fetchFile(state.videoFile));
+    logVideo('Running v360 filter...', 'info'); progressFill.style.width = '20%';
     const cal = state.calibration;
-    const focalPx = cal.radius * 3840 / 2; // approximate focal length
-    const yawOffset = Math.atan2(cal.offsetX, focalPx) * (180 / Math.PI);
-
-    // Run FFmpeg with v360 filter
-    await ffmpeg.exec([
-      '-i', 'input.mp4',
-      '-vf', `v360=dfisheye:equirect:ih_fov=${cal.fov}:iv_fov=${cal.fov}:yaw=${yawOffset.toFixed(2)}`,
-      '-c:v', 'libx264',
-      '-preset', 'fast',
-      '-crf', '23',
-      '-c:a', 'copy',
-      '-y',
-      'output.mp4'
-    ]);
-
-    logVideo('Processing complete. Extracting output...', 'success');
-    progressFill.style.width = '90%';
-    progressText.textContent = 'Preparing download...';
-
-    // Read output
+    const yaw = Math.atan2(cal.offsetX, cal.radius * 3840 / 2) * (180 / Math.PI);
+    await ffmpeg.exec(['-i','input.mp4','-vf',`v360=dfisheye:equirect:ih_fov=${cal.fov}:iv_fov=${cal.fov}:yaw=${yaw.toFixed(2)}`,'-c:v','libx264','-preset','fast','-crf','23','-c:a','copy','-y','output.mp4']);
+    logVideo('Processing complete.', 'success'); progressFill.style.width = '90%';
     const outputData = await ffmpeg.readFile('output.mp4');
     const outputBlob = new Blob([outputData.buffer], { type: 'video/mp4' });
     const sizeMB = (outputBlob.size / 1024 / 1024).toFixed(1);
-
-    // Trigger download
     const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
     const filename = `lazarus_360_${ts}.mp4`;
-    const url = URL.createObjectURL(outputBlob);
-    const a = document.createElement('a');
-    a.href = url; a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 2000);
-
-    progressFill.style.width = '100%';
-    progressText.textContent = `Done! ${filename} (${sizeMB} MB)`;
+    const a = document.createElement('a'); a.href = URL.createObjectURL(outputBlob); a.download = filename;
+    document.body.appendChild(a); a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+    progressFill.style.width = '100%'; progressText.textContent = `Done! ${filename} (${sizeMB} MB)`;
     logVideo(`Exported: ${filename} (${sizeMB} MB)`, 'success');
     showToast(`Video saved: ${sizeMB} MB`, 'success');
-
-    // Cleanup MEMFS
-    await ffmpeg.deleteFile('input.mp4');
-    await ffmpeg.deleteFile('output.mp4');
-
+    await ffmpeg.deleteFile('input.mp4'); await ffmpeg.deleteFile('output.mp4');
   } catch (err) {
     if (err.message?.includes('abort') || err.message?.includes('terminated')) {
-      logVideo('Processing cancelled by user.', 'error');
-      progressText.textContent = 'Cancelled';
+      logVideo('Cancelled.', 'error'); progressText.textContent = 'Cancelled';
     } else {
-      logVideo(`Error: ${err.message}`, 'error');
-      progressText.textContent = `Failed: ${err.message}`;
-      showToast(`Video processing failed`, 'error');
-      console.error('FFmpeg error:', err);
-
-      // Memory fallback suggestion
-      if (err.message?.includes('memory') || err.message?.includes('OOM')) {
-        logVideo('💡 Try a shorter clip or lower resolution. Mobile memory is limited.', 'info');
-      }
+      logVideo(`Error: ${err.message}`, 'error'); progressText.textContent = `Failed: ${err.message}`;
+      showToast('Video processing failed', 'error');
     }
   } finally {
     state.processing = false;
     document.getElementById('btnProcessVideo').disabled = false;
+    document.getElementById('btnCancelVideo').style.display = 'none';
   }
 }
 
 function cancelProcessing() {
-  if (state.ffmpegWorker) {
-    try {
-      state.ffmpegWorker.terminate();
-      logVideo('FFmpeg terminated.', 'error');
-    } catch (e) {}
-    state.ffmpegWorker = null;
-  }
+  if (state.ffmpegWorker) { try { state.ffmpegWorker.terminate(); } catch(e){} state.ffmpegWorker = null; }
   state.processing = false;
   document.getElementById('videoProgressFill').style.width = '0%';
   document.getElementById('videoProgressText').textContent = 'Cancelled';
   document.getElementById('btnProcessVideo').disabled = false;
+  document.getElementById('btnCancelVideo').style.display = 'none';
 }
 
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// SECTION 5: INITIALIZATION
+// INIT
 // ═══════════════════════════════════════════════════════════════════════════════
 
 window.addEventListener('DOMContentLoaded', () => {
   checkCapabilities();
-  logVideo('Project Lazarus initialized.', 'success');
-  logVideo('Gear 360 SM-C200 controller ready.', 'info');
+  logVideo('Project Lazarus v3.0 Desktop initialized.', 'success');
+  logVideo('Proxy mode — zero browser restrictions.', 'info');
 
-  // Register Service Worker for offline PWA
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js')
-      .then((reg) => {
-        logVideo('Service Worker registered. App works offline.', 'success');
-        reg.addEventListener('updatefound', () => {
-          logVideo('New version available. Refresh to update.', 'info');
-        });
-      })
-      .catch((err) => {
-        logVideo('SW registration failed: ' + err.message, 'error');
-      });
-  }
+  setupDragDrop('imageDropZone', (f) => loadImageToStitcher(URL.createObjectURL(f)));
+  setupDragDrop('stitchViewport', (f) => loadImageToStitcher(URL.createObjectURL(f)));
+  setupDragDrop('videoDropZone', handleVideoFile);
 
-  // Preload stitch engine when idle
-  if ('requestIdleCallback' in window) {
-    requestIdleCallback(() => initStitchEngine(), { timeout: 3000 });
-  } else {
-    setTimeout(() => initStitchEngine(), 2000);
-  }
+  if ('requestIdleCallback' in window) requestIdleCallback(() => initStitchEngine(), { timeout: 3000 });
+  else setTimeout(() => initStitchEngine(), 2000);
 });
 
-// Prevent WebGL context loss on visibility change
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible' && state.stitchRenderer) {
-    renderStitch();
-  }
+  if (document.visibilityState === 'visible' && state.stitchRenderer) renderStitch();
 });
 
-// Handle back button / page unload
-window.addEventListener('beforeunload', () => {
-  if (state.processing) {
-    return 'Video processing is still running. Are you sure?';
-  }
+window.addEventListener('beforeunload', (e) => {
+  if (state.processing) { e.preventDefault(); e.returnValue = ''; }
 });
 </script>
 </body>
